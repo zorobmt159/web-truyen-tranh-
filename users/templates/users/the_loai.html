@@ -1,0 +1,58 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Thể Loại{% endblock %}
+
+{% block extra_css %}
+<style>
+  .filter-box { background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px; }
+  .filter-title { font-family:'Oswald',sans-serif;font-size:1.1rem;color:var(--accent);margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:8px;text-transform:uppercase; }
+  .tag-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px; }
+  .tag-link { display:block;color:var(--text);text-decoration:none;font-size:0.85rem;padding:6px 10px;border-radius:5px;border:1px solid var(--border);text-align:center;transition:0.2s; }
+  .tag-link:hover { background:rgba(232,84,10,0.1);color:var(--accent);border-color:var(--accent); }
+  .tag-link.active { background:rgba(232,84,10,0.2);color:var(--accent);border-color:var(--accent);font-weight:700; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="filter-box">
+  <h2 class="filter-title">Thể loại truyện</h2>
+  <div class="tag-grid">
+    <a href="{% url 'the_loai' %}" class="tag-link {% if not selected_tag %}active{% endif %}">Tất cả</a>
+    {% for tag in tags %}
+      <a href="{% url 'genre_filter' tag.name %}" class="tag-link {% if selected_tag == tag %}active{% endif %}">{{ tag.name }}</a>
+    {% endfor %}
+  </div>
+</section>
+
+<h2 class="section-title">
+  {% if selected_tag %}Truyện: {{ selected_tag.name }}{% else %}Tất cả truyện{% endif %}
+</h2>
+
+<div class="manga-grid">
+  {% for comic in comics %}
+  <a class="manga-card" href="{% url 'comic_detail' pk=comic.pk %}">
+    <div class="manga-thumb">
+      {% if comic.cover_image %}
+        <img src="{{ comic.cover_image.url }}" alt="{{ comic.title }}" loading="lazy"/>
+      {% else %}
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#222;font-size:2rem;">📚</div>
+      {% endif %}
+      <div class="manga-chapter">
+        <span style="color:var(--accent2);font-weight:700;">Ch.{{ comic.latest_chapter_number|default:"?" }}</span>
+        <span>{{ comic.updated_at|timesince }} trước</span>
+      </div>
+    </div>
+    <div class="manga-info" style="padding:8px 10px 10px;">
+      <h3 style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ comic.title }}</h3>
+      <div style="display:flex;gap:10px;margin-top:4px;font-size:.72rem;color:var(--muted);">
+        <span>👁️ {{ comic.views|default:0 }}</span>
+        <span>❤️ {{ comic.likes|default:0 }}</span>
+      </div>
+    </div>
+  </a>
+  {% empty %}
+    <p style="color:var(--muted);grid-column:1/-1;text-align:center;padding:40px;">Chưa có truyện nào thuộc thể loại này.</p>
+  {% endfor %}
+</div>
+{% endblock %}

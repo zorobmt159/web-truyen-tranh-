@@ -1,0 +1,556 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi" data-lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NetTrom - {% block title %}{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    /* ── DARK/LIGHT theme ── */
+    :root{--bg:#111;--surface:#1a1a1a;--card:#1e1e1e;--border:#2a2a2a;--accent:#e8540a;--accent2:#f0a500;--text:#e0e0e0;--muted:#888;--header-bg:#000;--input-bg:#222;}
+    html[data-theme="light"]{--bg:#f5f5f5;--surface:#fff;--card:#fff;--border:#ddd;--text:#1a1a1a;--muted:#666;--header-bg:#fff;--input-bg:#f0f0f0;}
+    body{background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;transition:background .3s,color .3s;}
+    header{background:var(--header-bg);border-bottom:2px solid var(--accent);padding:0 24px;display:flex;align-items:center;height:56px;gap:15px;width:100%;z-index:1000;position:sticky;top:0;box-shadow:0 2px 12px rgba(0,0,0,.3);}
+    .logo{font-family:'Oswald',sans-serif;font-size:1.5rem;text-decoration:none;}
+    .logo span:first-child{color:var(--text);}.logo span:last-child{color:var(--accent);}
+    nav{display:flex;gap:20px;align-items:center;height:100%;}
+    nav a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:700;text-transform:uppercase;}
+    nav a:hover,nav a.active{color:var(--accent);}
+    .genre-dropdown{position:relative;height:100%;display:flex;align-items:center;cursor:pointer;}
+    .mega-menu{position:absolute;top:56px;left:-150px;width:600px;background:var(--surface);border:1px solid var(--border);display:none;grid-template-columns:repeat(4,1fr);padding:15px;z-index:99999;border-radius:0 0 8px 8px;box-shadow:0 10px 30px rgba(0,0,0,.3);}
+    .genre-dropdown:hover .mega-menu{display:grid;}
+    .mega-menu a{color:var(--text)!important;padding:6px 10px!important;font-size:.82rem!important;text-transform:none!important;font-weight:400!important;text-decoration:none;border-radius:4px;}
+    .mega-menu a:hover{background:rgba(232,84,10,.1);color:var(--accent)!important;}
+    .mega-menu .all-genres{grid-column:1/-1;border-bottom:1px solid var(--border);margin-bottom:8px;font-weight:700!important;color:var(--accent)!important;}
+    /* Header tools */
+    .header-tools{display:flex;align-items:center;gap:8px;margin-left:4px;}
+    .tool-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);cursor:pointer;padding:5px 9px;font-size:.8rem;font-family:'Nunito',sans-serif;font-weight:600;transition:.2s;display:flex;align-items:center;gap:4px;}
+    .tool-btn:hover{border-color:var(--accent);color:var(--accent);}
+    /* Search */
+    .search-bar{margin-left:auto;display:flex;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;overflow:visible;position:relative;}
+    .search-bar input{flex-grow:1;padding:8px 12px;border:none;background:none;color:var(--text);outline:none;width:200px;}
+    .search-bar button{padding:8px 12px;background:none;border:none;color:var(--muted);cursor:pointer;flex-shrink:0;}
+    .search-suggestions{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #ddd;z-index:999999;max-height:380px;overflow-y:auto;box-shadow:0 10px 25px rgba(0,0,0,.15);display:none;border-radius:8px;}
+    .suggestion-item{display:flex;padding:10px 12px;gap:12px;border-bottom:1px solid #eee;text-decoration:none;color:#333;align-items:center;transition:.15s;}
+    .suggestion-item:hover{background:#f4f4f4;}
+    /* User auth */
+    .user-auth{display:flex;align-items:center;gap:10px;padding-left:8px;white-space:nowrap;}
+    .avatar-wrap{position:relative;cursor:pointer;}
+    .avatar-circle{width:34px;height:34px;border-radius:50%;background:#333;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+    .avatar-circle img{width:100%;height:100%;object-fit:cover;}
+    .avatar-menu-drop{display:none;position:absolute;top:44px;right:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;min-width:180px;z-index:999999;box-shadow:0 8px 24px rgba(0,0,0,.25);}
+    .avatar-menu-drop a{display:block;padding:10px 16px;color:var(--text);text-decoration:none;font-size:.85rem;}
+    .avatar-menu-drop a:hover{background:rgba(232,84,10,.08);color:var(--accent);}
+    .avatar-menu-drop a.logout{color:#e55;border-top:1px solid var(--border);}
+    /* Layout */
+    .page-wrap{max-width:1200px;margin:28px auto;padding:0 16px;display:grid;grid-template-columns:1fr 280px;gap:28px;align-items:start;}
+    .page-wrap.no-sidebar{grid-template-columns:1fr;}
+    .section-title{font-family:'Oswald',sans-serif;font-size:1.1rem;border-left:4px solid var(--accent);padding-left:10px;margin-bottom:16px;text-transform:uppercase;}
+    .manga-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:16px;}
+    .manga-card{background:var(--card);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;transition:transform .2s;display:block;border:1px solid var(--border);}
+    .manga-card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(232,84,10,.2);}
+    .manga-thumb{position:relative;padding-top:140%;background:var(--input-bg);}
+    .manga-thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+    .manga-chapter{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.85));padding:24px 8px 6px;font-size:.72rem;color:#ddd;display:flex;justify-content:space-between;}
+    .manga-chapter .chap{color:var(--accent2);font-weight:700;}
+    .manga-info{padding:8px 10px 10px;}
+    .manga-info h3{font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .manga-stats{display:flex;gap:10px;margin-top:4px;font-size:.72rem;color:var(--muted);}
+    /* Sidebar */
+    .sidebar{display:flex;flex-direction:column;gap:20px;}
+    .top-box{background:var(--surface);border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+    .tab-header{display:flex;border-bottom:1px solid var(--border);}
+    .tab-btn{flex:1;padding:10px 0;background:none;border:none;border-bottom:3px solid transparent;color:var(--muted);font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;font-size:.8rem;}
+    .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+    .tab-panel{display:none;}.tab-panel.active{display:block;}
+    .top-item{display:flex;align-items:center;gap:10px;padding:8px 14px;text-decoration:none;color:var(--text);border-bottom:1px solid var(--border);}
+    .top-item:hover{background:rgba(232,84,10,.06);}
+    .rank{font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;width:22px;text-align:center;color:var(--muted);}
+    .rank.r1{color:#f0a500;}.rank.r2{color:#aaa;}.rank.r3{color:#cd7f32;}
+    .top-thumb{width:38px;height:50px;object-fit:cover;border-radius:4px;flex-shrink:0;}
+    .top-meta h4{font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;}
+    .top-meta span{font-size:.72rem;color:var(--muted);}
+    /* Ads */
+    .ads-banner{border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;}
+    @keyframes shake{0%,100%{transform:rotate(-10deg) scale(1.05);}50%{transform:rotate(10deg) scale(1.1);}}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(240,165,0,.4);}50%{box-shadow:0 0 18px rgba(240,165,0,.9);}}
+    @keyframes popIn{from{transform:scale(.7);opacity:0;}to{transform:scale(1);opacity:1;}}
+    /* Light mode bulb glow */
+    html[data-theme="light"] header{box-shadow:0 2px 20px rgba(232,84,10,.15);}
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+<header>
+  <a href="{% url 'home' %}" class="logo"><span>NET</span><span>TROM</span></a>
+  <nav>
+    <a href="{% url 'hot_comics' %}" id="nav-hot">Hot</a>
+    <a href="{% url 'followed_comics' %}" id="nav-follow">Theo dõi</a>
+    <div class="genre-dropdown">
+      <a href="{% url 'the_loai' %}" id="nav-genre">Thể loại ▼</a>
+      <div class="mega-menu">
+        <a href="{% url 'the_loai' %}" class="all-genres" id="nav-all-genre">Tất cả thể loại</a>
+        {% for tag in all_tags %}<a href="{% url 'genre_filter' tag.name %}">{{ tag.name }}</a>{% endfor %}
+      </div>
+    </div>
+    <a href="{% url 'ranking' %}" id="nav-rank">Xếp hạng</a>
+  </nav>
+
+  <form action="{% url 'search_results' %}" method="GET" class="search-bar">
+    <input type="text" name="q" id="search-input" autocomplete="off"/>
+    <button type="submit">🔍</button>
+    <div id="search-suggestions" class="search-suggestions"></div>
+  </form>
+
+  <!-- Tools: Dark mode + Language -->
+  <div class="header-tools">
+    <button class="tool-btn" id="theme-btn" onclick="toggleTheme()" title="Bật/tắt sáng tối">
+      <span id="theme-icon">☀️</span>
+    </button>
+    <button class="tool-btn" id="lang-btn" onclick="toggleLang()" title="Đổi ngôn ngữ">
+      <span id="lang-icon">🇻🇳</span> <span id="lang-label">VI</span>
+    </button>
+  </div>
+
+  <div class="user-auth">
+    {% if user.is_authenticated %}
+      <div class="avatar-wrap" id="avatar-wrap">
+        <div class="avatar-circle">
+          {% if user.profile.avatar %}<img src="{{ user.profile.avatar.url }}" alt="avatar">
+          {% else %}<span style="font-weight:700;font-size:.9rem;color:#fff;">{{ user.username|first|upper }}</span>{% endif %}
+        </div>
+        <div class="avatar-menu-drop" id="avatar-menu-drop">
+          <a href="{% url 'profile' %}" id="menu-profile">👤 Hồ sơ</a>
+          <a href="{% url 'pricing' %}" id="menu-upgrade">⭐ Nâng cấp VIP</a>
+          <a href="{% url 'logout' %}" class="logout" id="menu-logout">🚪 Đăng xuất</a>
+        </div>
+      </div>
+    {% else %}
+      <a href="{% url 'login' %}" id="btn-login" style="color:var(--accent);text-decoration:none;font-weight:700;font-size:.85rem;">Đăng nhập</a>
+      <a href="{% url 'register' %}" id="btn-register" style="color:#fff;background:var(--accent);padding:6px 14px;border-radius:5px;text-decoration:none;font-weight:700;font-size:.85rem;">Đăng ký</a>
+    {% endif %}
+  </div>
+</header>
+
+<div class="page-wrap {% block page_class %}{% endblock %}">
+  <main>
+    {% if user.is_authenticated and user.profile.plan == 'free' %}
+    <div id="ads-slot" class="ads-banner"></div>
+    {% elif not user.is_authenticated %}
+    <div class="ads-banner" style="background:linear-gradient(135deg,var(--surface),var(--card));border:1px solid var(--border);">
+      <div style="font-size:2.2rem;flex-shrink:0;">🎉</div>
+      <div style="flex:1;"><strong id="ads-guest-title" style="display:block;font-size:.92rem;color:var(--text);margin-bottom:3px;">Đăng ký miễn phí ngay!</strong><span id="ads-guest-sub" style="color:var(--muted);font-size:.78rem;">Truy cập hàng nghìn bộ truyện · <a href="{% url 'register' %}" style="color:var(--accent);">Đăng ký →</a></span></div>
+    </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  {% block sidebar %}
+  <aside class="sidebar">
+    <div class="top-box">
+      <div class="tab-header">
+        <button class="tab-btn active" onclick="switchTab('thang',this)" id="tab-btn-month">Tháng</button>
+        <button class="tab-btn" onclick="switchTab('tuan',this)" id="tab-btn-week">Tuần</button>
+        <button class="tab-btn" onclick="switchTab('ngay',this)" id="tab-btn-day">Ngày</button>
+      </div>
+      <div class="tab-panel active" id="tab-thang">
+        {% for item in top_month %}<a href="{% url 'comic_detail' pk=item.pk %}" class="top-item">
+          <span class="rank {% if forloop.counter <= 3 %}r{{forloop.counter}}{% endif %}">{{forloop.counter}}</span>
+          <img class="top-thumb" src="{% if item.cover_image %}{{ item.cover_image.url }}{% else %}https://via.placeholder.com/38x50/222/888?text=?{% endif %}"/>
+          <div class="top-meta"><h4>{{ item.title }}</h4><span>👁 {{ item.views }}</span></div>
+        </a>{% endfor %}
+      </div>
+      <div class="tab-panel" id="tab-tuan">
+        {% for item in top_week %}<a href="{% url 'comic_detail' pk=item.pk %}" class="top-item">
+          <span class="rank {% if forloop.counter <= 3 %}r{{forloop.counter}}{% endif %}">{{forloop.counter}}</span>
+          <img class="top-thumb" src="{% if item.cover_image %}{{ item.cover_image.url }}{% else %}https://via.placeholder.com/38x50/222/888?text=?{% endif %}"/>
+          <div class="top-meta"><h4>{{ item.title }}</h4><span>👁 {{ item.views }}</span></div>
+        </a>{% empty %}<p style="padding:12px;font-size:.8rem;color:var(--muted);" id="no-data-week">Chưa có dữ liệu.</p>{% endfor %}
+      </div>
+      <div class="tab-panel" id="tab-ngay">
+        {% for item in top_day %}<a href="{% url 'comic_detail' pk=item.pk %}" class="top-item">
+          <span class="rank {% if forloop.counter <= 3 %}r{{forloop.counter}}{% endif %}">{{forloop.counter}}</span>
+          <img class="top-thumb" src="{% if item.cover_image %}{{ item.cover_image.url }}{% else %}https://via.placeholder.com/38x50/222/888?text=?{% endif %}"/>
+          <div class="top-meta"><h4>{{ item.title }}</h4><span>👁 {{ item.views }}</span></div>
+        </a>{% empty %}<p style="padding:12px;font-size:.8rem;color:var(--muted);" id="no-data-day">Chưa có dữ liệu.</p>{% endfor %}
+      </div>
+    </div>
+  </aside>
+  {% endblock %}
+</div>
+
+<!-- ══ POPUP SAU ĐĂNG KÝ ══ -->
+{% if show_coupon_popup %}
+<div id="welcome-popup" style="position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999999;display:flex;align-items:center;justify-content:center;">
+  <div style="background:#1e1e1e;border:2px solid var(--accent2);border-radius:20px;padding:40px 36px;max-width:400px;width:92%;text-align:center;animation:popIn .4s ease;">
+    <div style="font-size:3.5rem;margin-bottom:10px;">🎊</div>
+    <h2 id="popup-title" style="font-size:1.5rem;font-weight:700;color:#fff;margin-bottom:6px;">Chào mừng đến NetTrom!</h2>
+    <p id="popup-sub" style="color:var(--muted);font-size:.9rem;margin-bottom:18px;">Quà tặng đặc biệt dành cho thành viên mới:</p>
+    <div style="background:linear-gradient(135deg,#1a1500,#2a2000);border:2px dashed var(--accent2);border-radius:10px;padding:14px;margin-bottom:20px;">
+      <div id="popup-code-label" style="font-size:.8rem;color:var(--muted);margin-bottom:4px;">Mã giảm giá</div>
+      <div style="font-size:1.8rem;font-weight:700;color:var(--accent2);letter-spacing:5px;">WELCOME99</div>
+      <div id="popup-code-desc" style="font-size:.8rem;color:#4ade80;margin-top:4px;">Giảm 99% gói Premium (còn ~990đ)</div>
+    </div>
+    <a href="{% url 'checkout' plan='premium' %}" id="popup-cta" onclick="document.getElementById('welcome-popup').style.display='none'" style="display:block;background:linear-gradient(135deg,var(--accent),#c44);color:#fff;padding:14px;border-radius:10px;font-weight:700;text-decoration:none;font-size:1rem;margin-bottom:10px;">🚀 Dùng mã ngay</a>
+    <button id="popup-skip" onclick="document.getElementById('welcome-popup').style.display='none'" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;">Để sau</button>
+  </div>
+</div>
+{% endif %}
+
+<!-- ══ HỘP QUÀ FOMO ══ -->
+{% if user.is_authenticated and user.profile.plan == 'free' %}
+<div id="fomo-box" onclick="openFomo()" style="position:fixed;bottom:90px;right:22px;z-index:99997;cursor:pointer;text-align:center;user-select:none;">
+  <div style="font-size:2.8rem;animation:shake 1.4s infinite;display:inline-block;filter:drop-shadow(0 0 10px gold);">🎁</div>
+  <div id="fomo-timer-badge" style="background:#e8540a;color:#fff;font-size:.68rem;font-weight:700;border-radius:12px;padding:2px 8px;margin-top:2px;animation:pulseGlow 2s infinite;"></div>
+</div>
+<div id="fomo-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999998;align-items:center;justify-content:center;">
+  <div style="background:#1e1e1e;border:2px solid var(--accent2);border-radius:18px;padding:36px 30px;max-width:370px;width:92%;text-align:center;position:relative;">
+    <button onclick="closeFomo()" style="position:absolute;top:14px;right:18px;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;">✕</button>
+    <div style="font-size:3rem;margin-bottom:8px;">⚡</div>
+    <h2 id="fomo-title" style="font-size:1.25rem;font-weight:700;color:var(--accent2);margin-bottom:8px;">Ưu đãi sắp hết!</h2>
+    <p id="fomo-sub" style="color:var(--muted);font-size:.85rem;margin-bottom:6px;">Giảm <strong style="color:var(--accent);">99%</strong> gói Premium — hết hạn sau:</p>
+    <div id="fomo-modal-countdown" style="font-size:2rem;font-weight:700;color:var(--accent2);margin-bottom:16px;font-family:'Oswald',sans-serif;letter-spacing:2px;"></div>
+    <div style="background:#111;border:1.5px dashed var(--accent2);border-radius:8px;padding:12px;font-size:1.3rem;font-weight:700;color:var(--accent2);letter-spacing:4px;margin-bottom:18px;">WELCOME99</div>
+    <a href="{% url 'checkout' plan='premium' %}" id="fomo-cta" style="display:block;background:var(--accent);color:#fff;padding:13px;border-radius:9px;font-weight:700;text-decoration:none;margin-bottom:10px;">🔥 Nâng cấp ngay</a>
+    <button id="fomo-skip" onclick="closeFomo()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.82rem;">Bỏ qua</button>
+  </div>
+</div>
+{% endif %}
+
+<!-- ══ CHATBOT ══ -->
+<div id="chat-btn" onclick="toggleChat()" style="position:fixed;bottom:22px;right:22px;z-index:99999;width:54px;height:54px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 18px rgba(232,84,10,.6);font-size:1.5rem;" title="NetTrom Bot">💬</div>
+<div id="chat-box" style="display:none;position:fixed;bottom:86px;right:22px;z-index:99999;width:310px;background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.4);overflow:hidden;font-family:'Nunito',sans-serif;">
+  <div style="background:var(--accent);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:8px;"><span style="font-size:1.2rem;">🤖</span><div><div style="font-weight:700;color:#fff;font-size:.9rem;">NetTrom Bot</div><div id="chat-subtitle" style="font-size:.7rem;color:rgba(255,255,255,.7);">Luôn sẵn sàng hỗ trợ!</div></div></div>
+    <button onclick="toggleChat()" style="background:none;border:none;color:rgba(255,255,255,.8);cursor:pointer;font-size:1.1rem;">✕</button>
+  </div>
+  <div id="chat-messages" style="height:250px;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:var(--bg);"></div>
+  <div id="chat-suggestions" style="padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--border);background:var(--surface);min-height:44px;"></div>
+</div>
+
+<!-- ══ MÈO PREMIUM ══ -->
+{% if user.is_authenticated and user.profile.plan == 'premium' %}
+<canvas id="cat-canvas" style="position:fixed;inset:0;pointer-events:none;z-index:99990;width:100vw;height:100vh;"></canvas>
+<div id="cat-hitbox" style="position:fixed;z-index:99991;cursor:grab;width:72px;height:72px;"></div>
+{% endif %}
+
+<script>
+// ══ I18N ══
+var LANG={
+  vi:{
+    search:'Tìm truyện...',
+    navHot:'Hot',navFollow:'Theo dõi',navGenre:'Thể loại ▼',navAllGenre:'Tất cả thể loại',navRank:'Xếp hạng',
+    tabMonth:'Tháng',tabWeek:'Tuần',tabDay:'Ngày',
+    noData:'Chưa có dữ liệu.',
+    menuProfile:'👤 Hồ sơ',menuUpgrade:'⭐ Nâng cấp VIP',menuLogout:'🚪 Đăng xuất',
+    btnLogin:'Đăng nhập',btnRegister:'Đăng ký',
+    adPro:'Nâng cấp Pro — 49.000đ/tháng',adProSub:'Không quảng cáo · Đọc sớm chapter mới',adProCta:'Xem gói Pro',
+    adPremium:'Premium — Trải nghiệm hoàn hảo!',adPremiumSub:'Tải offline · Đọc trước 7 ngày',adUpgrade:'Nâng cấp ngay',
+    adCoupon:'Mã mới nhất: WELCOME99',adCouponSub:'Giảm 99% cho thành viên mới — Chỉ hôm nay!',adGetCode:'Nhận mã ngay',
+    adLibrary:'Hơn 500 bộ truyện chất lượng',adLibrarySub:'Manga · Manhwa · Manhua · Cập nhật mỗi ngày',adExplore:'Khám phá ngay',
+    adFollow:'Theo dõi truyện yêu thích',adFollowSub:'Nhận thông báo chapter mới ngay lập tức',adFollowCta:'Theo dõi ngay',
+    expired:'Hết hạn!',
+    popupTitle:'Chào mừng đến NetTrom!',popupSub:'Quà tặng đặc biệt dành cho thành viên mới:',
+    popupCodeLabel:'Mã giảm giá',popupCodeDesc:'Giảm 99% gói Premium (còn ~990đ)',
+    popupCta:'🚀 Dùng mã ngay',popupSkip:'Để sau',
+    fomoTitle:'Ưu đãi sắp hết!',fomoSub:'Giảm 99% gói Premium — hết hạn sau:',
+    fomoCta:'🔥 Nâng cấp ngay',fomoSkip:'Bỏ qua',
+    chatSubtitle:'Luôn sẵn sàng hỗ trợ!',
+    chatWelcome:'Xin chào! 👋 Tôi là NetTrom Bot.\nBạn muốn hỏi gì?',
+    chatBack:'Bạn muốn hỏi gì tiếp?',
+    q1:'🌐 Web này là gì?',q2:'💎 Các gói VIP',q3:'🎁 Mã giảm giá',q4:'📚 Gợi ý truyện',q5:'❓ Cách đăng ký',back:'🏠 Quay lại',
+    a1:'NetTrom là web đọc truyện tranh miễn phí 🎉\nHàng trăm bộ manga·manhwa·manhua, cập nhật hàng ngày!',
+    a2:'NetTrom có 3 gói:\n\n🆓 Free — Miễn phí, có quảng cáo\n🔶 Pro — 49.000đ/tháng\n👑 Premium — 99.000đ/tháng\n\nThanh toán qua QR chuyển khoản BIDV.',
+    a3:'Mã dành cho thành viên mới:\n\n🏷️ WELCOME99\n→ Giảm 99% gói Premium!\n\nNhập mã ở trang thanh toán nhé 😊',
+    a4:'Một vài bộ được yêu thích:\n\n⚔️ Vinland Saga\n👊 One Punch Man\n🏐 Haikyuu!!\n🔒 Blue Lock\n🗡️ Sword Art Online\n\nVào Xếp hạng để xem thêm!',
+    a5:'Đăng ký rất đơn giản:\n\n1️⃣ Nhấn "Đăng ký" góc trên phải\n2️⃣ Điền tên đăng nhập & mật khẩu\n3️⃣ Xong! Nhận mã WELCOME99 giảm 99% 🎉',
+    adsGuestTitle:'Đăng ký miễn phí ngay!',adsGuestSub:'Truy cập hàng nghìn bộ truyện ·',
+  },
+  en:{
+    search:'Search manga...',
+    navHot:'Hot',navFollow:'Following',navGenre:'Genre ▼',navAllGenre:'All genres',navRank:'Rankings',
+    tabMonth:'Month',tabWeek:'Week',tabDay:'Today',
+    noData:'No data yet.',
+    menuProfile:'👤 Profile',menuUpgrade:'⭐ Upgrade VIP',menuLogout:'🚪 Logout',
+    btnLogin:'Login',btnRegister:'Sign Up',
+    adPro:'Upgrade Pro — 49,000₫/month',adProSub:'No ads · Early chapter access',adProCta:'See Pro plan',
+    adPremium:'Premium — Full experience!',adPremiumSub:'Offline download · Read 7 days early',adUpgrade:'Upgrade now',
+    adCoupon:'Latest code: WELCOME99',adCouponSub:'99% off Premium for new members — Today only!',adGetCode:'Get code',
+    adLibrary:'500+ quality manga titles',adLibrarySub:'Manga · Manhwa · Manhua · Updated daily',adExplore:'Explore now',
+    adFollow:'Follow your favorites',adFollowSub:'Get notified on new chapters instantly',adFollowCta:'Follow now',
+    expired:'Expired!',
+    popupTitle:'Welcome to NetTrom!',popupSub:'Special gift for new members:',
+    popupCodeLabel:'Coupon code',popupCodeDesc:'99% off Premium (only ~990₫)',
+    popupCta:'🚀 Use code now',popupSkip:'Maybe later',
+    fomoTitle:'Offer ending soon!',fomoSub:'99% off Premium — expires in:',
+    fomoCta:'🔥 Upgrade now',fomoSkip:'Skip',
+    chatSubtitle:'Always here to help!',
+    chatWelcome:'Hi! 👋 I\'m NetTrom Bot.\nWhat would you like to know?',
+    chatBack:'What else would you like to ask?',
+    q1:'🌐 What is this site?',q2:'💎 VIP plans',q3:'🎁 Discount codes',q4:'📚 Comic recommendations',q5:'❓ How to register',back:'🏠 Back',
+    a1:'NetTrom is a free manga reading website 🎉\nHundreds of manga·manhwa·manhua titles, updated daily!',
+    a2:'NetTrom has 3 plans:\n\n🆓 Free — Free, with ads\n🔶 Pro — 49,000₫/month\n👑 Premium — 99,000₫/month\n\nPay via BIDV bank transfer QR.',
+    a3:'Code for new members:\n\n🏷️ WELCOME99\n→ 99% off Premium!\n\nEnter at checkout 😊',
+    a4:'Most popular titles:\n\n⚔️ Vinland Saga\n👊 One Punch Man\n🏐 Haikyuu!!\n🔒 Blue Lock\n🗡️ Sword Art Online\n\nSee Rankings for more!',
+    a5:'Signing up is easy:\n\n1️⃣ Click "Sign Up" top right\n2️⃣ Enter username & password\n3️⃣ Done! Get WELCOME99 for 99% off 🎉',
+    adsGuestTitle:'Sign up for free!',adsGuestSub:'Access thousands of manga titles ·',
+  }
+};
+var curLang='vi';
+try{curLang=localStorage.getItem('nettrom_lang')||'vi';}catch(e){}
+function _t(k){return (LANG[curLang]||LANG['vi'])[k]||k;}
+function applyLang(){
+  var L=curLang;
+  var si2=document.getElementById('search-input');if(si2)si2.placeholder=_t('search');
+  var el=function(id,txt){var e=document.getElementById(id);if(e)e.textContent=txt;};
+  el('nav-hot',_t('navHot'));el('nav-follow',_t('navFollow'));
+  el('nav-genre',_t('navGenre'));el('nav-all-genre',_t('navAllGenre'));el('nav-rank',_t('navRank'));
+  el('tab-btn-month',_t('tabMonth'));el('tab-btn-week',_t('tabWeek'));el('tab-btn-day',_t('tabDay'));
+  el('menu-profile',_t('menuProfile'));el('menu-upgrade',_t('menuUpgrade'));el('menu-logout',_t('menuLogout'));
+  el('btn-login',_t('btnLogin'));el('btn-register',_t('btnRegister'));
+  el('popup-title',_t('popupTitle'));el('popup-sub',_t('popupSub'));
+  el('popup-code-label',_t('popupCodeLabel'));el('popup-code-desc',_t('popupCodeDesc'));
+  el('popup-cta',_t('popupCta'));el('popup-skip',_t('popupSkip'));
+  el('fomo-title',_t('fomoTitle'));el('fomo-sub',_t('fomoSub'));
+  el('fomo-cta',_t('fomoCta'));el('fomo-skip',_t('fomoSkip'));
+  el('chat-subtitle',_t('chatSubtitle'));
+  document.getElementById('lang-label').textContent=L==='vi'?'VI':'EN';
+  document.getElementById('lang-icon').textContent=L==='vi'?'🇻🇳':'🇬🇧';
+  document.documentElement.lang=L==='vi'?'vi':'en';
+  // rebuild chatbot topics with new lang
+  var keys=['q1','q2','q3','q4','q5','back'];
+  TOPICS={
+    '__welcome__':{msg:_t('chatWelcome'),opts:keys.slice(0,5).map(function(k){return _t(k);})},
+    '__back__':{msg:_t('chatBack'),opts:keys.slice(0,5).map(function(k){return _t(k);})},
+  };
+  [['__q1__','a1'],['__q2__','a2'],['__q3__','a3'],['__q4__','a4'],['__q5__','a5']].forEach(function(pair,i){
+    TOPICS[pair[0]]={msg:_t(pair[1]),opts:[_t(keys[i===0?1:0]),_t(keys[i===4?3:4]),_t('back')]};
+  });
+  OPT_MAP={};keys.forEach(function(k){OPT_MAP[_t(k)]='__'+k+'__';});
+}
+function toggleLang(){
+  curLang=curLang==='vi'?'en':'vi';
+  try{localStorage.setItem('nettrom_lang',curLang);}catch(e){}
+  applyLang();
+}
+
+// ── DARK/LIGHT MODE ──
+var curTheme='dark';
+try{curTheme=localStorage.getItem('nettrom_theme')||'dark';}catch(e){}
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme',curTheme);
+  document.getElementById('theme-icon').textContent=curTheme==='dark'?'☀️':'🌙';
+}
+function toggleTheme(){
+  curTheme=curTheme==='dark'?'light':'dark';
+  try{localStorage.setItem('nettrom_theme',curTheme);}catch(e){}
+  applyTheme();
+}
+applyTheme();applyLang();
+
+// ── Tab sidebar ──
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.style.display='none';p.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  var p=document.getElementById('tab-'+id);if(p){p.style.display='block';p.classList.add('active');}
+  btn.classList.add('active');
+}
+// ── Avatar dropdown ──
+var aw=document.getElementById('avatar-wrap'),ad=document.getElementById('avatar-menu-drop');
+if(aw&&ad){aw.addEventListener('click',function(e){e.stopPropagation();ad.style.display=ad.style.display==='block'?'none':'block';});document.addEventListener('click',function(){if(ad)ad.style.display='none';});}
+
+// ── Search suggestions ──
+var si=document.getElementById('search-input'),sb=document.getElementById('search-suggestions');
+if(si&&sb){
+  var timer=null;
+  si.addEventListener('input',function(){
+    clearTimeout(timer);
+    var q=this.value.trim();
+    if(q.length<1){sb.style.display='none';sb.innerHTML='';return;}
+    timer=setTimeout(function(){
+      var xhr=new XMLHttpRequest();
+      xhr.open('GET','/search-suggestions/?q='+encodeURIComponent(q),true);
+      xhr.setRequestHeader('X-Requested-With','XMLHttpRequest');
+      xhr.onload=function(){
+        if(xhr.status!==200){sb.style.display='none';return;}
+        try{
+          var data=JSON.parse(xhr.responseText);
+          if(!data||!data.length){sb.style.display='none';return;}
+          sb.innerHTML=data.map(function(c){
+            var img=c.cover_url
+              ?'<img src="'+c.cover_url+'" style="width:36px;height:50px;object-fit:cover;border-radius:3px;flex-shrink:0;"/>'
+              :'<div style="width:36px;height:50px;background:#e0e0e0;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">📚</div>';
+            return '<a class="suggestion-item" href="/comic/'+c.pk+'/">'+img+'<div><div style="color:#1a6fa8;font-size:.88rem;font-weight:700;margin-bottom:2px;">'+c.title+'</div><div style="font-size:.75rem;color:#888;">Ch.'+c.latest_chapter+'</div></div></a>';
+          }).join('');
+          sb.style.display='block';
+        }catch(e){sb.style.display='none';}
+      };
+      xhr.onerror=function(){sb.style.display='none';};
+      xhr.send();
+    },180);
+  });
+  si.addEventListener('keydown',function(e){if(e.key==='Escape')sb.style.display='none';});
+  document.addEventListener('click',function(e){if(si&&!si.closest('form').contains(e.target))sb.style.display='none';});
+}
+
+// ── Ads xoay vòng ──
+(function(){
+  var slot=document.getElementById('ads-slot');if(!slot)return;
+  var ads=[
+    {icon:'⚡',bg:'linear-gradient(135deg,#1a0a00,#2a1200)',border:'#e8540a',tKey:'adPro',sKey:'adProSub',link:'/pricing/',cKey:'adProCta'},
+    {icon:'👑',bg:'linear-gradient(135deg,#1a1500,#2a2000)',border:'#f0a500',tKey:'adPremium',sKey:'adPremiumSub',link:'/pricing/',cKey:'adUpgrade'},
+    {icon:'🎁',bg:'linear-gradient(135deg,#001a0a,#002a12)',border:'#4ade80',tKey:'adCoupon',sKey:'adCouponSub',link:'/checkout/premium/',cKey:'adGetCode'},
+    {icon:'📖',bg:'linear-gradient(135deg,#0a001a,#150028)',border:'#a78bfa',tKey:'adLibrary',sKey:'adLibrarySub',link:'/',cKey:'adExplore'},
+    {icon:'🔔',bg:'linear-gradient(135deg,#001520,#002a38)',border:'#38bdf8',tKey:'adFollow',sKey:'adFollowSub',link:'/theo-doi/',cKey:'adFollowCta'},
+  ];
+  var a=ads[Math.floor(Math.random()*ads.length)];
+  slot.style.cssText='border-radius:10px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;background:'+a.bg+';border:1px solid '+a.border+';';
+  slot.innerHTML='<div style="font-size:2.2rem;flex-shrink:0;">'+a.icon+'</div><div style="flex:1;"><strong style="display:block;font-size:.92rem;color:#fff;margin-bottom:3px;">'+_t(a.tKey)+'</strong><span style="color:var(--muted);font-size:.78rem;">'+_t(a.sKey)+'</span></div><a href="'+a.link+'" style="flex-shrink:0;background:'+a.border+';color:#fff;padding:7px 14px;border-radius:7px;font-weight:700;text-decoration:none;font-size:.78rem;white-space:nowrap;">'+_t(a.cKey)+'</a>';
+})();
+
+// ── FOMO ──
+(function(){
+  var KEY='nettrom_fomo_end',DUR=5*60*1000;
+  try{if(!localStorage.getItem(KEY)||parseInt(localStorage.getItem(KEY))<Date.now())localStorage.setItem(KEY,Date.now()+DUR);}catch(e){}
+  function getEnd(){try{return parseInt(localStorage.getItem(KEY))||0;}catch(e){return 0;}}
+  function fmt(ms){var s=Math.max(0,Math.floor(ms/1000)),m=Math.floor(s/60);return m+':'+(s%60<10?'0':'')+(s%60);}
+  function tick(){
+    var left=getEnd()-Date.now();
+    var badge=document.getElementById('fomo-timer-badge'),cd=document.getElementById('fomo-modal-countdown');
+    if(badge)badge.textContent=left>0?'⏰ '+fmt(left):_t('expired');
+    if(cd)cd.textContent=left>0?fmt(left):'00:00';
+    if(left<=0){
+      var fb=document.getElementById('fomo-box');if(fb)fb.style.display='none';
+      var fm=document.getElementById('fomo-modal');if(fm)fm.style.display='none';
+      try{localStorage.removeItem(KEY);}catch(e){}
+    }
+  }
+  setInterval(tick,1000);tick();
+})();
+function openFomo(){var m=document.getElementById('fomo-modal');if(m)m.style.display='flex';}
+function closeFomo(){var m=document.getElementById('fomo-modal');if(m)m.style.display='none';}
+
+// ── CHATBOT ──
+var chatOpen=false;
+var TOPICS={};var OPT_MAP={};
+function rebuildTopics(){
+  var keys=['q1','q2','q3','q4','q5'];
+  TOPICS={
+    '__welcome__':{msg:_t('chatWelcome'),opts:keys.map(function(k){return _t(k);})},
+    '__back__':{msg:_t('chatBack'),opts:keys.map(function(k){return _t(k);})},
+  };
+  [['__q1__','a1'],['__q2__','a2'],['__q3__','a3'],['__q4__','a4'],['__q5__','a5']].forEach(function(pair,i){
+    var back2keys=[keys[i===0?1:0],keys[i===4?3:4],'back'];
+    TOPICS[pair[0]]={msg:_t(pair[1]),opts:back2keys.map(function(k){return _t(k);})};
+  });
+  OPT_MAP={};keys.concat(['back']).forEach(function(k){OPT_MAP[_t(k)]='__'+k+'__';});
+}
+rebuildTopics();
+function renderChat(key){
+  var data=TOPICS[key]||TOPICS['__welcome__'];
+  var box=document.getElementById('chat-messages'),sugg=document.getElementById('chat-suggestions');
+  if(key!=='__welcome__'&&key!=='__back__'){
+    var label=Object.keys(OPT_MAP).find(function(l){return OPT_MAP[l]===key;});
+    if(label){var ub=document.createElement('div');ub.style.cssText='background:var(--accent);color:#fff;border-radius:12px 12px 2px 12px;padding:9px 13px;font-size:.83rem;max-width:80%;align-self:flex-end;line-height:1.5;';ub.textContent=label;box.appendChild(ub);}
+  }
+  var bb=document.createElement('div');bb.style.cssText='background:var(--card);border:1px solid var(--border);border-radius:2px 12px 12px 12px;padding:9px 13px;font-size:.83rem;max-width:88%;align-self:flex-start;line-height:1.6;white-space:pre-line;color:var(--text);';bb.textContent=data.msg;box.appendChild(bb);box.scrollTop=box.scrollHeight;
+  sugg.innerHTML='';
+  data.opts.forEach(function(opt){
+    var btn=document.createElement('button');btn.textContent=opt;
+    btn.style.cssText='background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:20px;font-size:.75rem;cursor:pointer;font-family:inherit;transition:.15s;';
+    btn.onmouseover=function(){this.style.background='var(--accent)';this.style.borderColor='var(--accent)';this.style.color='#fff';};
+    btn.onmouseout=function(){this.style.background='var(--surface)';this.style.borderColor='var(--border)';this.style.color='var(--text)';};
+    btn.onclick=function(){var k=OPT_MAP[opt]||'__welcome__';renderChat(k);};
+    sugg.appendChild(btn);
+  });
+}
+function toggleChat(){
+  chatOpen=!chatOpen;
+  var box=document.getElementById('chat-box');box.style.display=chatOpen?'block':'none';
+  if(chatOpen&&document.getElementById('chat-messages').children.length===0){rebuildTopics();renderChat('__welcome__');}
+}
+
+// ── MÈO PREMIUM ──
+(function(){
+  var canvas=document.getElementById('cat-canvas'),hitbox=document.getElementById('cat-hitbox');
+  if(!canvas||!hitbox)return;
+  var W=window.innerWidth,H=window.innerHeight;
+  canvas.width=W;canvas.height=H;
+  window.addEventListener('resize',function(){W=window.innerWidth;H=window.innerHeight;canvas.width=W;canvas.height=H;});
+  var ctx=canvas.getContext('2d');
+  var S=72;
+  var cat={x:200,y:0,vx:0.7,vy:0,dir:1,frame:0,tick:0,state:'walk',stateTimer:0,dragging:false,dragOX:0,dragOY:0,flyVx:0,flyVy:0,lastX:0,lastY:0};
+  function drawCat(c,state,frame,dir){
+    c.save();if(dir<0){c.translate(S,0);c.scale(-1,1);}
+    var legA=(state==='walk'||state==='bite')&&frame%2===0;
+    c.fillStyle='rgba(0,0,0,.2)';c.beginPath();c.ellipse(S/2,S-3,S/2-8,4,0,0,Math.PI*2);c.fill();
+    c.save();c.strokeStyle='#c97a50';c.lineWidth=4;c.lineCap='round';var tw=Math.sin(cat.tick*.08)*7;c.beginPath();c.moveTo(14,S-16);c.quadraticCurveTo(-8,S-6+tw,5,S+4);c.stroke();c.restore();
+    c.fillStyle='#f4a261';c.beginPath();c.roundRect(14,S*.42,S-24,S*.4,10);c.fill();
+    c.fillStyle='#fde68a';c.beginPath();c.ellipse(S/2,S*.61,9,7,0,0,Math.PI*2);c.fill();
+    c.strokeStyle='rgba(160,80,30,.2)';c.lineWidth=1.5;[[22,S*.44,22,S*.7],[S-22,S*.44,S-22,S*.7]].forEach(function(l){c.beginPath();c.moveTo(l[0],l[1]);c.lineTo(l[2],l[3]);c.stroke();});
+    var legs=[13,23,S-29,S-19];
+    legs.forEach(function(lx,li){
+      var dy=li%2===0?(legA?11:7):(legA?7:11);
+      c.fillStyle='#f4a261';c.beginPath();c.roundRect(lx,S*.72,8,dy,4);c.fill();
+      c.fillStyle='#fde68a';c.beginPath();c.arc(lx+4,S*.72+dy+2,4,0,Math.PI*2);c.fill();
+    });
+    c.fillStyle='#f4a261';c.beginPath();c.arc(S/2,S*.3,S*.28,0,Math.PI*2);c.fill();
+    c.strokeStyle='rgba(160,80,30,.18)';c.lineWidth=1.5;
+    [[S/2-4,S*.1,S/2-6,S*.22],[S/2+4,S*.1,S/2+6,S*.22],[S/2,S*.08,S/2,S*.2]].forEach(function(l){c.beginPath();c.moveTo(l[0],l[1]);c.lineTo(l[2],l[3]);c.stroke();});
+    c.fillStyle='#f4a261';
+    [[S/2-S*.21,S*.13,S/2-S*.31,0,S/2-S*.08,S*.12],[S/2+S*.21,S*.13,S/2+S*.31,0,S/2+S*.08,S*.12]].forEach(function(e){c.beginPath();c.moveTo(e[0],e[1]);c.lineTo(e[2],e[3]);c.lineTo(e[4],e[5]);c.fill();});
+    c.fillStyle='#e05a3a';
+    [[S/2-S*.17,S*.12,S/2-S*.25,S*.03,S/2-S*.09,S*.13],[S/2+S*.17,S*.12,S/2+S*.25,S*.03,S/2+S*.09,S*.13]].forEach(function(e){c.beginPath();c.moveTo(e[0],e[1]);c.lineTo(e[2],e[3]);c.lineTo(e[4],e[5]);c.fill();});
+    var ey=S*.29;
+    if(state==='sleep'){c.strokeStyle='#4a2800';c.lineWidth=2;c.beginPath();c.arc(S/2-9,ey,4,Math.PI,0);c.stroke();c.beginPath();c.arc(S/2+9,ey,4,Math.PI,0);c.stroke();}
+    else if(state==='happy'){
+      c.fillStyle='#1a0a00';c.beginPath();c.arc(S/2-9,ey,5,0,Math.PI*2);c.fill();c.beginPath();c.arc(S/2+9,ey,5,0,Math.PI*2);c.fill();
+      c.fillStyle='#fff';c.beginPath();c.arc(S/2-7,ey-2,2,0,Math.PI*2);c.fill();c.beginPath();c.arc(S/2+11,ey-2,2,0,Math.PI*2);c.fill();
+      c.fillStyle='rgba(255,110,110,.5)';c.beginPath();c.ellipse(S/2-16,ey+5,5,3,0,0,Math.PI*2);c.fill();c.beginPath();c.ellipse(S/2+16,ey+5,5,3,0,0,Math.PI*2);c.fill();
+    } else {
+      c.fillStyle='#1a0a00';c.beginPath();c.arc(S/2-9,ey,4,0,Math.PI*2);c.fill();c.beginPath();c.arc(S/2+9,ey,4,0,Math.PI*2);c.fill();
+      c.fillStyle='#fff';c.beginPath();c.arc(S/2-7,ey-1.5,1.5,0,Math.PI*2);c.fill();c.beginPath();c.arc(S/2+11,ey-1.5,1.5,0,Math.PI*2);c.fill();
+    }
+    c.fillStyle='#b04a18';c.beginPath();c.arc(S/2,S*.35,2.5,0,Math.PI*2);c.fill();
+    c.strokeStyle='#7a3010';c.lineWidth=1.5;
+    c.beginPath();c.moveTo(S/2,S*.36);c.quadraticCurveTo(S/2-5,S*.41,S/2-8,S*.385);c.stroke();
+    c.beginPath();c.moveTo(S/2,S*.36);c.quadraticCurveTo(S/2+5,S*.41,S/2+8,S*.385);c.stroke();
+    c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=1;
+    [[-2,0,2]].forEach(function(ws){ws.forEach(function(w,wi){c.beginPath();c.moveTo(S/2-10,S*.37+w);c.lineTo(S/2-26,S*.36+w+(wi-1)*2);c.stroke();c.beginPath();c.moveTo(S/2+10,S*.37+w);c.lineTo(S/2+26,S*.36+w+(wi-1)*2);c.stroke();});});
+    if(state==='bite'){c.save();c.translate(S/2+12,S*.26);c.rotate(.3);c.fillStyle='#fff';c.strokeStyle='#ccc';c.lineWidth=1;c.beginPath();c.roundRect(0,0,22,16,3);c.fill();c.stroke();c.fillStyle='#666';c.font='bold 7px sans-serif';c.fillText('漫画',3,11);c.fillStyle='rgba(0,0,0,.12)';c.beginPath();c.arc(0,8,5,0,Math.PI*2);c.fill();c.restore();}
+    if(state==='sleep'){var zo=Math.sin(cat.tick*.05)*2;c.fillStyle='rgba(255,255,255,.9)';c.font='bold 11px sans-serif';c.fillText('z',S-6,S*.09+zo);c.font='bold 8px sans-serif';c.fillText('z',S+3,S*.01+zo);}
+    c.restore();
+  }
+  function syncHitbox(){hitbox.style.left=cat.x+'px';hitbox.style.top=cat.y+'px';}
+  hitbox.addEventListener('mousedown',function(e){
+    var ry=e.clientY-cat.y;
+    if(ry<S*.48){cat.state='happy';cat.stateTimer=80;}
+    else{cat.dragging=true;cat.dragOX=e.clientX-cat.x;cat.dragOY=e.clientY-cat.y;cat.lastX=e.clientX;cat.lastY=e.clientY;hitbox.style.cursor='grabbing';}
+    e.preventDefault();
+  });
+  document.addEventListener('mousemove',function(e){if(cat.dragging){cat.lastX=e.clientX;cat.lastY=e.clientY;cat.x=e.clientX-cat.dragOX;cat.y=e.clientY-cat.dragOY;syncHitbox();}});
+  document.addEventListener('mouseup',function(e){
+    if(cat.dragging){cat.dragging=false;cat.flyVx=(e.clientX-cat.lastX)*.25+(cat.dir>0?2.5:-2.5);cat.flyVy=Math.min((e.clientY-cat.lastY)*.25,-3);cat.state='flying';hitbox.style.cursor='grab';}
+  });
+  function update(){
+    cat.tick++;if(cat.tick%7===0)cat.frame++;
+    if(cat.dragging)return;
+    var gr=H-S-30;
+    if(cat.state==='flying'){cat.x+=cat.flyVx;cat.y+=cat.flyVy;cat.flyVy+=.32;if(cat.y>H+S){cat.state='falling';cat.y=-S;cat.x=80+Math.random()*(W-200);}return;}
+    if(cat.state==='falling'){cat.y+=4.5;if(cat.y>=gr){cat.y=gr;cat.state='walk';}return;}
+    if(cat.state==='happy'||cat.state==='sleep'){cat.stateTimer--;if(cat.stateTimer<=0)cat.state='walk';return;}
+    if(cat.state==='bite'){cat.stateTimer--;if(cat.stateTimer<=0)cat.state='walk';return;}
+    cat.x+=cat.vx*cat.dir;
+    if(cat.x<=0){cat.x=0;cat.dir=1;}if(cat.x>=W-S){cat.x=W-S;cat.dir=-1;}
+    cat.vy+=.32;cat.y+=cat.vy;if(cat.y>=gr){cat.y=gr;cat.vy=0;}
+    if(cat.tick%260===0){var r=Math.random();if(r<.25){cat.state='sleep';cat.stateTimer=180+Math.floor(Math.random()*200);}else if(r<.45){cat.state='bite';cat.stateTimer=100;}else if(r<.62){cat.dir*=-1;}else if(r<.76&&cat.y>=gr-2){cat.vy=-7;}}
+    syncHitbox();
+  }
+  function render(){ctx.clearRect(0,0,W,H);ctx.save();ctx.translate(cat.x,cat.y);drawCat(ctx,cat.state,cat.frame,cat.dir);ctx.restore();}
+  cat.y=H-S-30;syncHitbox();
+  (function loop(){update();render();requestAnimationFrame(loop);})();
+})();
+</script>
+</body>
+</html>

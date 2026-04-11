@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký</title>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet"/>
+    <style>
+        body { font-family: 'Nunito', sans-serif; background-color: #1a1a1a; color: #e0e0e0; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .register-container { background-color: #222; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); width: 100%; max-width: 400px; text-align: center; }
+        h2 { color: #e8540a; margin-bottom: 25px; font-family: 'Oswald', sans-serif; font-size: 2rem; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 8px; color: #ccc; font-weight: 600; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #444; border-radius: 4px; background-color: #333; color: #e0e0e0; font-size: 1rem; box-sizing: border-box; }
+        .form-group input:focus { border-color: #e8540a; outline: none; }
+
+        /* HIỂN THỊ LỖI BACKEND - QUAN TRỌNG ĐỂ BIẾT TẠI SAO KHÔNG CHUYỂN TRANG */
+        .django-errors { color: #ff4d4d; font-size: 13px; margin-top: 5px; list-style: none; padding: 0; font-weight: bold; }
+
+        button { background-color: #e8540a; color: white; padding: 12px 25px; border: none; border-radius: 4px; cursor: pointer; font-size: 1.1rem; font-weight: 700; transition: background-color 0.3s ease; width: 100%; }
+        button:hover { background-color: #cf4b09; }
+
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.85); align-items: center; justify-content: center; }
+        .captcha-container { background: #fff; border-radius: 4px; width: 420px; padding: 10px; position: relative; }
+        .close-button { position: absolute; top: 5px; right: 10px; font-size: 24px; color: #333; cursor: pointer; z-index: 1001; }
+        .captcha-header { background: #4285f4; color: white; padding: 12px; display: flex; justify-content: space-between; align-items: center; text-align: left; }
+        .instruction { font-size: 20px; line-height: 1.2; font-weight: 700; }
+        .captcha-info-image-container { width: 80px; height: 80px; overflow: hidden; border: 2px solid #fff; }
+        .captcha-info-image-container img { width: 100%; height: 100%; object-fit: cover; }
+        .grid-container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-top: 5px; background-color: #fff; border: 2px solid #fff; }
+        .grid-tile { width: 100%; padding-bottom: 100%; background-image: url('https://c.pxhere.com/photos/53/ad/photo-79186.jpg!d'); background-size: 400% 400%; background-repeat: no-repeat; cursor: pointer; position: relative; }
+        .grid-tile.selected { transform: scale(0.9); z-index: 1; outline: 2px solid #fff; }
+        .grid-tile.selected::after { content: "\2713"; position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; background-color: #4285f4; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .form-action { display: flex; justify-content: flex-end; padding: 10px 0; border-top: 1px solid #eee; margin-top: 10px; }
+        .submit-btn { background: #4285f4; color: white; border: none; padding: 10px 24px; cursor: pointer; font-weight: bold; border-radius: 2px; }
+        .inline-error { color: #d93025; font-size: 12px; font-weight: bold; display: none; margin-top: 4px; text-align: left; }
+        #recaptcha-wrapper { margin: 15px 0; display: flex; align-items: center; gap: 8px; background: #333; padding: 10px; border-radius: 3px; border: 1px solid #444; justify-content: space-between; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #e8540a; border-radius: 50%; width: 25px; height: 25px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>Đăng ký tài khoản</h2>
+        <form method="post" id="registrationForm">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <ul class="django-errors">
+                            {% for error in field.errors %}<li>{{ error }}</li>{% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div style="margin: 15px 0; text-align: left;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <input type="checkbox" id="check-dong-tinh" style="width: 18px; height: 18px; cursor: pointer;">
+                    <label for="check-dong-tinh" style="color: #bbb; font-size: 14px; cursor: pointer;">toi dong tinh</label>
+                </div>
+                <div id="dong-tinh-error" class="inline-error">Vui lòng xác nhận bạn dong tinh</div>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <div id="recaptcha-wrapper">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="checkbox" id="recaptcha-checkbox" style="width: 20px; height: 20px; cursor: pointer;">
+                        <label for="recaptcha-checkbox" style="color: #eee; font-size: 14px; cursor: pointer;">Xác nhận bạn không phải robot</label>
+                    </div>
+                    <div id="captcha-loader" style="display: none;"><div class="loader"></div></div>
+                    <img id="recaptcha-logo" src="https://www.gstatic.com/recaptcha/api2/logo_48.png" style="width: 25px; opacity: 0.8;">
+                </div>
+                <div id="captcha-main-error" class="inline-error">Vui lòng hoàn thành xác minh robot</div>
+            </div>
+
+            <button type="submit">Đăng ký</button>
+        </form>
+    </div>
+
+    <div id="customCaptchaModal" class="modal">
+        <div class="captcha-container">
+            <span class="close-button" onclick="closeCustomCaptchaModal()">&times;</span>
+            <div class="captcha-header">
+                <div class="header-text"><span class="instruction">Tìm người lính Việt Nam ở trong hình</span></div>
+                <div class="captcha-info-image-container">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGDUhH5Gj4c7KCLlFq8CijfaqrdGbHMh7lNw&s">
+                </div>
+            </div>
+            <div class="grid-container" id="captcha-grid-container"></div>
+            <div class="form-action">
+                <button type="button" class="submit-btn" id="verify-custom-captcha-btn">Xác minh</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('registrationForm');
+        const checkDongTinh = document.getElementById('check-dong-tinh');
+        const robotCheckbox = document.getElementById('recaptcha-checkbox');
+        const loader = document.getElementById('captcha-loader');
+        const logo = document.getElementById('recaptcha-logo');
+        const modal = document.getElementById('customCaptchaModal');
+        const container = document.getElementById("captcha-grid-container");
+
+        let captchaVerified = false;
+
+        robotCheckbox.onclick = function(e) {
+            if (captchaVerified) return;
+            e.preventDefault();
+            loader.style.display = 'block';
+            logo.style.display = 'none';
+            setTimeout(() => {
+                modal.style.display = 'flex';
+                initCaptcha();
+            }, 1000);
+        };
+
+        function initCaptcha() {
+            container.innerHTML = "";
+            for (let i = 0; i < 16; i++) {
+                const tile = document.createElement("div");
+                tile.className = "grid-tile";
+                const row = Math.floor(i / 4), col = i % 4;
+                tile.style.backgroundPosition = `${(col * 100) / 3}% ${(row * 100) / 3}%`;
+                tile.onclick = function () { this.classList.toggle("selected"); };
+                container.appendChild(tile);
+            }
+        }
+
+        document.getElementById('verify-custom-captcha-btn').onclick = function() {
+            if (document.querySelectorAll(".grid-tile.selected").length === 16) {
+                modal.style.display = 'none';
+                loader.style.display = 'none';
+                logo.style.display = 'block';
+                robotCheckbox.checked = true;
+                captchaVerified = true;
+                document.getElementById("captcha-main-error").style.display = 'none';
+            }
+        };
+
+        function closeCustomCaptchaModal() {
+            modal.style.display = 'none';
+            loader.style.display = 'none';
+            logo.style.display = 'block';
+            robotCheckbox.checked = false;
+        }
+
+        form.onsubmit = function(e) {
+            let valid = true;
+            if (!checkDongTinh.checked) {
+                document.getElementById("dong-tinh-error").style.display = 'block';
+                valid = false;
+            }
+            if (!captchaVerified) {
+                document.getElementById("captcha-main-error").style.display = 'block';
+                valid = false;
+            }
+            if(!valid) e.preventDefault();
+        };
+    </script>
+</body>
+</html>

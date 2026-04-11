@@ -1,0 +1,76 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Bảng Xếp Hạng{% endblock %}
+
+{% block extra_css %}
+<style>
+  .rank-tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
+  .rank-tab{padding:8px 20px;border-radius:20px;background:var(--surface);border:1px solid var(--border);color:var(--muted);text-decoration:none;font-weight:700;font-size:.85rem;transition:.2s;}
+  .rank-tab.active,.rank-tab:hover{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .rank-table{width:100%;border-collapse:collapse;}
+  .rank-table th{padding:10px 14px;text-align:left;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase;}
+  .rank-table td{padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+  .rank-table tr:hover td{background:rgba(255,255,255,.03);}
+  .rank-num{font-family:'Oswald',sans-serif;font-size:1.1rem;font-weight:700;color:var(--muted);width:40px;text-align:center;}
+  .rank-num.r1{color:#f0a500;}.rank-num.r2{color:#aaa;}.rank-num.r3{color:#cd7f32;}
+  .rank-cover{width:42px;height:56px;object-fit:cover;border-radius:4px;}
+  .rank-title{font-weight:700;font-size:.9rem;text-decoration:none;color:var(--text);}
+  .rank-title:hover{color:var(--accent);}
+  .rank-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700;}
+</style>
+{% endblock %}
+
+{% block content %}
+<h2 class="section-title">🏆 Bảng Xếp Hạng</h2>
+
+<div class="rank-tabs">
+  <a href="?type=view" class="rank-tab {% if rank_type == 'view' or not rank_type %}active{% endif %}">👁 Lượt xem</a>
+  <a href="?type=like" class="rank-tab {% if rank_type == 'like' %}active{% endif %}">❤️ Yêu thích</a>
+  <a href="?type=chapter" class="rank-tab {% if rank_type == 'chapter' %}active{% endif %}">📖 Số chapter</a>
+  <a href="?type=month" class="rank-tab {% if rank_type == 'month' %}active{% endif %}">📅 Top tháng</a>
+  <a href="?type=week" class="rank-tab {% if rank_type == 'week' %}active{% endif %}">📆 Top tuần</a>
+</div>
+
+<div style="background:var(--surface);border-radius:10px;border:1px solid var(--border);overflow:hidden;">
+  <table class="rank-table">
+    <thead><tr>
+      <th style="width:50px;">#</th>
+      <th>Truyện</th>
+      <th style="text-align:right;">
+        {% if rank_type == 'like' %}❤️ Like
+        {% elif rank_type == 'chapter' %}📖 Chapter
+        {% else %}👁 Views{% endif %}
+      </th>
+    </tr></thead>
+    <tbody>
+    {% for comic in ranked_comics %}
+    <tr>
+      <td><div class="rank-num {% if forloop.counter <= 3 %}r{{forloop.counter}}{% endif %}">{{ forloop.counter }}</div></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:12px;">
+          {% if comic.cover_image %}<img src="{{ comic.cover_image.url }}" class="rank-cover"/>
+          {% else %}<div style="width:42px;height:56px;background:#222;border-radius:4px;display:flex;align-items:center;justify-content:center;">📚</div>{% endif %}
+          <div>
+            <a href="{% url 'comic_detail' pk=comic.pk %}" class="rank-title">{{ comic.title }}</a>
+            <div style="margin-top:4px;display:flex;gap:6px;flex-wrap:wrap;">
+              {% for tag in comic.tags.all|slice:":3" %}
+              <span class="rank-badge" style="background:rgba(232,84,10,.15);color:var(--accent);">{{ tag.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td style="text-align:right;font-weight:700;color:var(--accent2);">
+        {% if rank_type == 'like' %}{{ comic.likes|default:0 }}
+        {% elif rank_type == 'chapter' %}{{ comic.chapters.count }}
+        {% else %}{{ comic.views|default:0 }}{% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3" style="text-align:center;padding:40px;color:var(--muted);">Chưa có dữ liệu.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

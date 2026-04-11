@@ -1,0 +1,36 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Tìm kiếm: {{ query }}{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Kết quả cho "{{ query }}"</h2>
+{% if results %}
+  <div class="manga-grid">
+    {% for comic in results %}
+    <a class="manga-card" href="{% url 'comic_detail' pk=comic.pk %}">
+      <div class="manga-thumb">
+        {% if comic.cover_image %}
+          <img src="{{ comic.cover_image.url }}" alt="{{ comic.title }}" loading="lazy"/>
+        {% else %}
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#222;font-size:2rem;">📚</div>
+        {% endif %}
+        <div class="manga-chapter">
+          <span style="color:var(--accent2);font-weight:700;">Ch.{{ comic.latest_chapter_number|default:"?" }}</span>
+          <span>{{ comic.updated_at|timesince }} trước</span>
+        </div>
+      </div>
+      <div class="manga-info" style="padding:8px 10px 10px;">
+        <h3 style="font-size:.82rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ comic.title }}</h3>
+        <div style="display:flex;gap:10px;margin-top:4px;font-size:.72rem;color:var(--muted);">
+          <span>👁️ {{ comic.views|default:0 }}</span>
+          <span>❤️ {{ comic.likes|default:0 }}</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p style="color:var(--muted);text-align:center;padding:60px 20px;">Không tìm thấy kết quả cho "{{ query }}".</p>
+{% endif %}
+{% endblock %}

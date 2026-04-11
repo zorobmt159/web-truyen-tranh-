@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Chờ xác nhận - NetTrom</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>body { background-color: #111; }</style>
+</head>
+<body>
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-[#1e1e1e] border border-gray-800 rounded-xl p-10 text-center max-w-md">
+            <div class="text-6xl mb-4">⏳</div>
+            <h1 class="text-2xl font-bold text-white mb-2">Đang chờ xác nhận</h1>
+            <p class="text-gray-400 mb-6">Thanh toán của bạn đang được admin kiểm tra. Gói <span class="text-orange-400 font-bold">{{ plan|upper }}</span> sẽ được kích hoạt sớm.</p>
+            <a href="{% url 'home' %}" class="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-2 rounded-lg">Về trang chủ</a>
+        </div>
+    </div>
+</body>
+</html>

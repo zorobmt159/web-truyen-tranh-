@@ -1,0 +1,30 @@
+{% extends 'users/base.html' %}
+{% load static %}
+
+{% block title %}Trang Chủ{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Truyện mới nhất</h2>
+<div class="manga-grid">
+  {% for comic in comics %}
+  <a class="manga-card" href="{% url 'comic_detail' pk=comic.pk %}">
+    <div class="manga-thumb">
+      {% if comic.cover_image %}<img src="{{ comic.cover_image.url }}" alt="{{ comic.title }}" loading="lazy"/>
+      {% else %}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#222;font-size:2rem;">📚</div>{% endif %}
+      <div class="manga-chapter">
+        <span class="chap">Ch.{{ comic.latest_chapter_number|default:"?" }}</span>
+        <span>{{ comic.updated_at|timesince }} trước</span>
+      </div>
+    </div>
+    <div class="manga-info">
+      <h3>{{ comic.title }}</h3>
+      <div class="manga-stats">
+        <span>👁 {{ comic.views|default:0 }}</span>
+        <span>❤️ {{ comic.likes|default:0 }}</span>
+      </div>
+    </div>
+  </a>
+  {% empty %}<p style="color:var(--muted);">Chưa có truyện nào.</p>
+  {% endfor %}
+</div>
+{% endblock %}
