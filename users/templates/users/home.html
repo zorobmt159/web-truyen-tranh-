@@ -13,7 +13,7 @@
       {% else %}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#222;font-size:2rem;">📚</div>{% endif %}
       <div class="manga-chapter">
         <span class="chap">Ch.{{ comic.latest_chapter_number|default:"?" }}</span>
-        <span>{{ comic.updated_at|timesince }} trước</span>
+        <span>{{ comic.updated_at|timesince }} <span data-i18n="ago">trước</span></span>
       </div>
     </div>
     <div class="manga-info">
@@ -24,7 +24,8 @@
       </div>
     </div>
   </a>
-  {% empty %}<p style="color:var(--muted);">Chưa có truyện nào.</p>
+  {% empty %}
+  <p style="color:var(--muted);" data-i18n="noComic">Chưa có truyện nào.</p>
   {% endfor %}
 </div>
 {% endblock %}
