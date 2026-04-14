@@ -55,3 +55,4 @@ CSRF_TRUSTED_ORIGINS = ['https://*.ngrok-free.dev']
 LOGIN_URL = 'login'
 # Sau khi login xong thì tự động quay về trang chủ (nếu không có tham số next)
 LOGIN_REDIRECT_URL = 'home'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
