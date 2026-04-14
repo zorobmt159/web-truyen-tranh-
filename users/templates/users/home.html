@@ -4,7 +4,7 @@
 {% block title %}Trang Chủ{% endblock %}
 
 {% block content %}
-<h2 class="section-title">Truyện mới nhất</h2>
+<h2 class="section-title" data-i18n="latest">Truyện mới nhất</h2>
 <div class="manga-grid">
   {% for comic in comics %}
   <a class="manga-card" href="{% url 'comic_detail' pk=comic.pk %}">
