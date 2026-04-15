@@ -140,7 +140,8 @@ Lưu ý:
 
 ## 🖼️ Hình ảnh
 
-👉 
+👉 <img width="1894" height="911" alt="image" src="https://github.com/user-attachments/assets/49a2fd5c-cd0f-4db7-a6e9-1760e3fe97c2" />
+
 
 ---
 
