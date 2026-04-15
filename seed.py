@@ -6,11 +6,11 @@ import time
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth import get_user_model
 
-from blog.models import Comic, Chapter, Tag
-
-# Django setup
+# Django setup (PHẢI ĐỨNG TRƯỚC IMPORT MODEL)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "myproject.settings")
 django.setup()
+
+from blog.models import Comic, Chapter, Tag
 
 
 # =========================
@@ -31,7 +31,7 @@ def create_admin():
 
 
 # =========================
-# GET COVER IMAGE (Jikan API)
+# GET COVER IMAGE
 # =========================
 def get_cover(title):
     try:
@@ -51,7 +51,6 @@ def get_cover(title):
 # SEED DATA
 # =========================
 def run():
-    # clear old data
     Chapter.objects.all().delete()
     Comic.objects.all().delete()
     Tag.objects.all().delete()
@@ -105,7 +104,7 @@ def run():
 
         # COVER IMAGE
         try:
-            print(f"📡 Fetch cover: {data['title']}")
+            print(f"📡 {data['title']}")
 
             image_url = get_cover(data["title"])
 
@@ -122,18 +121,16 @@ def run():
 
                 comic.cover_image.save(filename, img_file, save=True)
 
-                print(f"✅ Cover saved: {data['title']}")
+                print(f"✅ {data['title']}")
 
         except Exception as e:
-            print(f"⚠️ Cover error {data['title']}: {e}")
+            print(f"⚠️ {data['title']}: {e}")
 
         time.sleep(1)
 
     print(f"\n🎉 DONE: {Comic.objects.count()} comics created")
 
 
-# =========================
 # RUN
-# =========================
 run()
 create_admin()
