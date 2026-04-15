@@ -1,3 +1,5 @@
+# seed.py - File gốc, update toàn bộ
+
 import os, django, requests, time
 from io import BytesIO
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -27,16 +29,21 @@ def create_admin():
 
 
 # =========================
-# GET COVER IMAGE
+# GET COVER IMAGE - IMPROVED
 # =========================
-def get_cover(title):
-    try:
-        url = f"https://api.jikan.moe/v4/anime?q={title}&limit=1"
-        res = requests.get(url, timeout=10).json()
-        if res.get('data'):
-            return res['data'][0]['images']['jpg']['image_url']
-    except:
-        pass
+def get_cover(title, max_retries=2):
+    for attempt in range(max_retries):
+        try:
+            url = f"https://api.jikan.moe/v4/anime?q={title}&limit=1"
+            res = requests.get(url, timeout=5).json()
+            if res.get('data') and res['data'][0].get('images'):
+                return res['data'][0]['images']['jpg']['image_url']
+        except requests.exceptions.Timeout:
+            print(f"⚠️ {title}: Timeout, retry {attempt + 1}/{max_retries}")
+            time.sleep(2)
+        except Exception as e:
+            print(f"⚠️ {title}: {e}")
+            break
     return None
 
 
@@ -75,62 +82,65 @@ def run():
     ]
 
     headers = {"User-Agent": "Mozilla/5.0"}
+    success_count = 0
 
     for i, data in enumerate(comics_data):
-
-        # TAG
-        tag_objs = []
-        for t in data['tags']:
-            tag, _ = Tag.objects.get_or_create(name=t)
-            tag_objs.append(tag)
-
-        # COMIC
-        comic = Comic.objects.create(
-            title=data['title'],
-            description=data['description'],
-            views=1000 + i * 10,
-            likes=500 + i * 5,
-        )
-        comic.tags.set(tag_objs)
-
-        # CHAPTER
-        for n in range(1, 4):
-            Chapter.objects.create(
-                comic=comic,
-                chapter_number=n,
-                title=f"Chương {n}"
-            )
-
-        # COVER IMAGE
         try:
-            image_url = get_cover(data['title'])
-            print(f"📡 {data['title']}")
-            if image_url:
-                img_data = requests.get(image_url, headers=headers, timeout=10).content
-                fname = f"{data['title'].replace(' ','_')}.jpg"
+            # TAG
+            tag_objs = []
+            for t in data['tags']:
+                tag, _ = Tag.objects.get_or_create(name=t)
+                tag_objs.append(tag)
 
-                img_file = SimpleUploadedFile(
-                    fname,
-                    img_data,
-                    content_type="image/jpeg"
+            # COMIC
+            comic = Comic.objects.create(
+                title=data['title'],
+                description=data['description'],
+                views=1000 + i * 10,
+                likes=500 + i * 5,
+            )
+            comic.tags.set(tag_objs)
+
+            # CHAPTER
+            for n in range(1, 4):
+                Chapter.objects.create(
+                    comic=comic,
+                    chapter_number=n,
+                    title=f"Chương {n}"
                 )
 
-                comic.cover_image.save(fname, img_file, save=True)
-                print(f"✅ {data['title']}")
+            # COVER IMAGE
+            try:
+                image_url = get_cover(data['title'])
+                print(f"📡 {data['title']}")
+                if image_url:
+                    img_data = requests.get(image_url, headers=headers, timeout=5).content
+                    fname = f"{data['title'].replace(' ','_')}.jpg"
+
+                    img_file = SimpleUploadedFile(
+                        fname,
+                        img_data,
+                        content_type="image/jpeg"
+                    )
+
+                    comic.cover_image.save(fname, img_file, save=True)
+                    print(f"✅ {data['title']}")
+                else:
+                    print(f"⚠️ {data['title']}: Không tìm được ảnh")
+            except Exception as e:
+                print(f"⚠️ {data['title']}: {e}")
+
+            success_count += 1
+            time.sleep(1)
+
         except Exception as e:
-            print(f"⚠️ {data['title']}: {e}")
+            print(f"❌ Lỗi tạo comic {data['title']}: {e}")
+            continue
 
-        time.sleep(1)
-
-    print(f"\n🎉 DONE: {Comic.objects.count()} comics created")
+    print(f"\n🎉 DONE: {success_count} comics created")
 
 
 # RUN ALL
-run()
-create_admin()
-
-# seed.py - Giữ nguyên code, thêm check này ở cuối:
-
 if __name__ == '__main__':
     run()
     create_admin()
