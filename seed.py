@@ -36,14 +36,14 @@ def create_admin():
 COVER_MAP = {
     "One Punch Man": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw8B43Q0tVmm8hUYYbfgdbFS8sG8ujruWuyg&s",
     "Vinland Saga": "https://m.media-amazon.com/images/M/MV5BNDA3MGNmZTEtMzFiMy00ZmViLThhNmQtMjQ4ZDc5MDEyN2U1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
-    "Sword Art Online": "https://m.media-amazon.com/images/M/MV5BN2NhYzU2NDEtYzI1NS00MjgzLThjZGUtOTYxNGJkZjZmNDdjXkEyXkFqcGc@._V1_.jpg",
+    "Sword Art Online": "https://m.media-amazon.com/images/M/MV5BN2NhYzU2NDEtYzI1NS00MjgzLThjZGUtOTYyNGJkZjZmNDdjXkEyXkFqcGc@._V1_.jpg",
     "Haikyuu!!": "https://m.media-amazon.com/images/M/MV5BYjYxMWFlYTAtYTk0YS00NTMxLWJjNTQtM2E0NjdhYTRhNzE4XkEyXkFqcGc@._V1_.jpg",
     "Blue Lock": "https://upload.wikimedia.org/wikipedia/vi/0/07/Blue_Lock_vol_1.jpg",
     "Black Clover": "https://external-preview.redd.it/black-clover-spade-arc-key-visual-v0-zwXgqkt9a79-czOpiDPRN4M7RaR3qXmGH8ZNAjvvCcM.jpg?auto=webp&s=75b449bbfe125435f9a1ffd6c5a5440e9b98826b",
-    "Hunter x Hunter": "https://m.media-amazon.com/images/M/MV5BYzYxOTlkYzctNGY2MC00MjNjLWIxOWMtYzQwYjcxZWIwMmEwXkEyXkFqcGc@._V1_QL75_UY281_CR4,0,190,281_.jpg",
+    "Hunter x Hunter": "https://www.arcsystemworks.fr/wp-content/uploads/2024/10/portrait_standard_hp-1024x1536.jpg",
     "Death Note": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-CjmZOwj-fCkdyXLhM-yv0xW01kZOivg12g&s",
     "Tokyo Revengers": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSntNz5HZEGzs2m_qot7iC0IrW0CQQ5e_IosQ&s",
-    "Demon Slayer": "https://m.media-amazon.com/images/M/MV5BMWU1OGEwNmQtNGM3MS00YTYyLThmYmMtN2FjYzQzNzNmNTE0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    "Demon Slayer": "https://m.media-amazon.com/images/M/MV5BMWU1OGEwNmQtNGM3MS00YTYyLThhYmMtN2FjYzQzNzNmNTE0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
     "Spy x Family": "https://preview.redd.it/new-key-visual-for-spy-x-family-season-3-v0-avitygppitpe1.jpeg?width=640&crop=smart&auto=webp&s=77f0824a129766f41c233af21a35122a0f89c583",
     "Chainsaw Man": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvYewwgW0fGGvU0lzTCzh7S6AkYT1rKpiYrw&s",
     "My Hero Academia": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTro8eluwxHiX2UJOZlUcodWbnK16Vi3DAFFA&s",
@@ -88,7 +88,7 @@ def run():
 
     headers = {"User-Agent": "Mozilla/5.0"}
 
-    for data in comics_data:
+    for i, data in enumerate(comics_data):
 
         # TAGS
         tag_objs = []
@@ -96,10 +96,16 @@ def run():
             tag, _ = Tag.objects.get_or_create(name=t)
             tag_objs.append(tag)
 
+        # RANDOM FAKE STATS (views + likes)
+        views = (i + 1) * 1234
+        likes = (i + 1) * 321
+
         # COMIC
         comic = Comic.objects.create(
             title=data["title"],
             description=data["description"],
+            views=views,
+            likes=likes,
         )
         comic.tags.set(tag_objs)
 
@@ -111,7 +117,7 @@ def run():
                 title=f"Chương {n}"
             )
 
-        # COVER IMAGE (FROM MAP)
+        # COVER IMAGE
         try:
             print(f"📡 {data['title']}")
 
@@ -130,7 +136,7 @@ def run():
 
                 comic.cover_image.save(filename, img_file, save=True)
 
-                print(f"✅ {data['title']}")
+                print(f"✅ {data['title']} (views={views}, likes={likes})")
             else:
                 print(f"⚠️ No cover found for {data['title']}")
 
