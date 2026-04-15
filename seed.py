@@ -85,7 +85,6 @@ def run():
         comic = Comic.objects.create(
             title=data['title'],
             description=data['description'],
-@@ -68,30 +93,38 @@ def run():
         )
         comic.tags.set(tag_objs)
 
