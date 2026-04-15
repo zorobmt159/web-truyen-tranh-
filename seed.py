@@ -31,20 +31,29 @@ def create_admin():
 
 
 # =========================
-# GET COVER IMAGE
+# COVER MAP (NO API)
 # =========================
-def get_cover(title):
-    try:
-        url = f"https://api.jikan.moe/v4/anime?q={title}&limit=1"
-        res = requests.get(url, timeout=10).json()
-
-        if res.get("data"):
-            return res["data"][0]["images"]["jpg"]["image_url"]
-
-    except Exception as e:
-        print(f"⚠️ API error: {e}")
-
-    return None
+COVER_MAP = {
+    "One Punch Man": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQw8B43Q0tVmm8hUYYbfgdbFS8sG8ujruWuyg&s",
+    "Vinland Saga": "https://m.media-amazon.com/images/M/MV5BNDA3MGNmZTEtMzFiMy00ZmViLThhNmQtMjQ4ZDc5MDEyN2U1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    "Sword Art Online": "https://m.media-amazon.com/images/M/MV5BN2NhYzU2NDEtYzI1NS00MjgzLThjZGUtOTYxNGJkZjZmNDdjXkEyXkFqcGc@._V1_.jpg",
+    "Haikyuu!!": "https://m.media-amazon.com/images/M/MV5BYjYxMWFlYTAtYTk0YS00NTMxLWJjNTQtM2E0NjdhYTRhNzE4XkEyXkFqcGc@._V1_.jpg",
+    "Blue Lock": "https://upload.wikimedia.org/wikipedia/vi/0/07/Blue_Lock_vol_1.jpg",
+    "Black Clover": "https://external-preview.redd.it/black-clover-spade-arc-key-visual-v0-zwXgqkt9a79-czOpiDPRN4M7RaR3qXmGH8ZNAjvvCcM.jpg?auto=webp&s=75b449bbfe125435f9a1ffd6c5a5440e9b98826b",
+    "Hunter x Hunter": "https://m.media-amazon.com/images/M/MV5BYzYxOTlkYzctNGY2MC00MjNjLWIxOWMtYzQwYjcxZWIwMmEwXkEyXkFqcGc@._V1_QL75_UY281_CR4,0,190,281_.jpg",
+    "Death Note": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS-CjmZOwj-fCkdyXLhM-yv0xW01kZOivg12g&s",
+    "Tokyo Revengers": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSntNz5HZEGzs2m_qot7iC0IrW0CQQ5e_IosQ&s",
+    "Demon Slayer": "https://m.media-amazon.com/images/M/MV5BMWU1OGEwNmQtNGM3MS00YTYyLThmYmMtN2FjYzQzNzNmNTE0XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    "Spy x Family": "https://preview.redd.it/new-key-visual-for-spy-x-family-season-3-v0-avitygppitpe1.jpeg?width=640&crop=smart&auto=webp&s=77f0824a129766f41c233af21a35122a0f89c583",
+    "Chainsaw Man": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTvYewwgW0fGGvU0lzTCzh7S6AkYT1rKpiYrw&s",
+    "My Hero Academia": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTro8eluwxHiX2UJOZlUcodWbnK16Vi3DAFFA&s",
+    "Jujutsu Kaisen": "https://m.media-amazon.com/images/M/MV5BMjBlNTExMDAtMWZjZi00MDc5LWFkMjgtZDU0ZWQ5ODk3YWY5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    "Attack on Titan": "https://m.media-amazon.com/images/M/MV5BZjliODY5MzQtMmViZC00MTZmLWFhMWMtMjMwM2I3OGY1MTRiXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+    "Dragon Ball": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRJaBZ0z6wAuFBzFLV4aWxsWNhNOVrQ4jfQRQ&s",
+    "Bleach": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTQ2UB2qNjYSqYnTOi5iQw3Wn4hV0iW8zXRVg&s",
+    "Naruto": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiccwKj3fabqP1EGVJgaVGN4Bvaaxdy64fTg&s",
+    "One Piece": "https://upload.wikimedia.org/wikipedia/vi/9/90/One_Piece%2C_Volume_61_Cover_%28Japanese%29.jpg",
+}
 
 
 # =========================
@@ -102,11 +111,11 @@ def run():
                 title=f"Chương {n}"
             )
 
-        # COVER IMAGE
+        # COVER IMAGE (FROM MAP)
         try:
             print(f"📡 {data['title']}")
 
-            image_url = get_cover(data["title"])
+            image_url = COVER_MAP.get(data["title"])
 
             if image_url:
                 img_data = requests.get(image_url, headers=headers, timeout=10).content
@@ -122,6 +131,8 @@ def run():
                 comic.cover_image.save(filename, img_file, save=True)
 
                 print(f"✅ {data['title']}")
+            else:
+                print(f"⚠️ No cover found for {data['title']}")
 
         except Exception as e:
             print(f"⚠️ {data['title']}: {e}")
