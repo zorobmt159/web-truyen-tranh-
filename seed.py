@@ -1,58 +1,98 @@
 %%writefile seed.py
-import os, django
+import os, django, requests, time
+from io import BytesIO
+from django.core.files.uploadedfile import SimpleUploadedFile
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myproject.settings')
 django.setup()
 
 from blog.models import Comic, Chapter, Tag
+
+def get_cover(title):
+    try:
+        url = f"https://api.jikan.moe/v4/anime?q={title}&limit=1"
+        res = requests.get(url, timeout=10).json()
+        if res.get('data') and res['data'][0]['images']['jpg']:
+            return res['data'][0]['images']['jpg']['image_url']
+    except:
+        pass
+    return None
 
 def run():
     if Comic.objects.count() > 0:
         print("✅ Đã có data, bỏ qua.")
         return
 
-    data = [
-        ("One Piece",           "Hành trình tìm kho báu.",              ["Phiêu lưu","Hành động"],     1200, 800),
-        ("Naruto",              "Hành trình trở thành Hokage.",         ["Ninja","Hành động"],          1100, 750),
-        ("Attack on Titan",     "Sinh tồn trước người khổng lồ.",       ["Hành động","Kinh dị"],        1300, 900),
-        ("Jujutsu Kaisen",      "Chiến đấu với lời nguyền.",            ["Siêu nhiên","Hành động"],     1250, 870),
-        ("Demon Slayer",        "Kiếm sĩ diệt quỷ cứu em gái.",        ["Siêu nhiên","Hành động"],     1180, 820),
-        ("One Punch Man",       "Anh hùng đấm phát chết luôn.",         ["Hài hước","Hành động"],       1350, 950),
-        ("Death Note",          "Cuốn sổ tử thần đấu trí đỉnh cao.",   ["Tâm lý","Siêu nhiên"],        1050, 730),
-        ("Chainsaw Man",        "Thợ săn quỷ với sức mạnh quỷ cưa.",   ["Kinh dị","Hành động"],        1150, 780),
-        ("Spy x Family",        "Gia đình giả tưởng điệp viên sát thủ.",["Hài hước","Hành động"],      980,  690),
-        ("Blue Lock",           "Dự án đào tạo tiền đạo số 1 TG.",     ["Thể thao","Bóng đá"],         1400, 960),
-        ("Haikyuu!!",           "Đam mê bóng chuyền bất tận.",          ["Thể thao","Học đường"],       890,  610),
-        ("Vinland Saga",        "Sử thi về chiến binh Viking.",         ["Lịch sử","Hành động"],        1190, 810),
-        ("Hunter x Hunter",     "Kỳ thi thợ săn phiêu lưu.",           ["Phiêu lưu","Hành động"],      970,  660),
-        ("Fullmetal Alchemist", "Anh em giả kim tìm lại cơ thể.",      ["Giả tưởng","Phiêu lưu"],      920,  620),
-        ("Dragon Ball",         "Bảy viên ngọc rồng vũ trụ.",          ["Chiến đấu","Phiêu lưu"],      950,  650),
-        ("Bleach",              "Cuộc chiến của các Tử thần.",          ["Siêu nhiên","Hành động"],     900,  600),
-        ("My Hero Academia",    "Thế giới siêu anh hùng.",             ["Siêu anh hùng","Học đường"],  1000, 700),
-        ("Tokyo Revengers",     "Du hành thời gian đổi số phận.",      ["Hành động","Du hành"],        870,  580),
-        ("Sword Art Online",    "Mắc kẹt trong thế giới game.",        ["Game","Hành động"],           840,  560),
-        ("Black Clover",        "Cậu bé không phép muốn làm Vua.",     ["Giả tưởng","Phép thuật"],     810,  540),
+    # Xóa data cũ nếu có
+    Chapter.objects.all().delete()
+    Comic.objects.all().delete()
+    Tag.objects.all().delete()
+
+    comics_data = [
+        {"title": "One Piece",           "description": "Hành trình tìm kiếm kho báu huyền thoại.",           "tags": ["Phiêu lưu","Hành động"]},
+        {"title": "Naruto",              "description": "Hành trình trở thành Hokage của cậu bé ninja.",       "tags": ["Ninja","Hành động"]},
+        {"title": "Bleach",              "description": "Cuộc chiến của các Tử thần.",                         "tags": ["Siêu nhiên","Hành động"]},
+        {"title": "Dragon Ball",         "description": "Bảy viên ngọc rồng và những trận chiến vũ trụ.",      "tags": ["Chiến đấu","Phiêu lưu"]},
+        {"title": "Attack on Titan",     "description": "Cuộc chiến sinh tồn trước người khổng lồ.",           "tags": ["Hành động","Kinh dị"]},
+        {"title": "Jujutsu Kaisen",      "description": "Chiến đấu với những lời nguyền độc ác.",               "tags": ["Siêu nhiên","Hành động"]},
+        {"title": "My Hero Academia",    "description": "Thế giới của những siêu anh hùng.",                   "tags": ["Siêu anh hùng","Học đường"]},
+        {"title": "Chainsaw Man",        "description": "Thợ săn quỷ với sức mạnh quỷ cưa.",                   "tags": ["Kinh dị","Hành động"]},
+        {"title": "Spy x Family",        "description": "Gia đình giả tưởng của điệp viên và sát thủ.",        "tags": ["Hài hước","Hành động"]},
+        {"title": "Demon Slayer",        "description": "Kiếm sĩ diệt quỷ cứu em gái.",                        "tags": ["Siêu nhiên","Hành động"]},
+        {"title": "Tokyo Revengers",     "description": "Du hành thời gian thay đổi số phận băng đảng.",       "tags": ["Hành động","Du hành"]},
+        {"title": "Death Note",          "description": "Cuốn sổ tử thần và cuộc đấu trí đỉnh cao.",           "tags": ["Tâm lý","Siêu nhiên"]},
+        {"title": "Fullmetal Alchemist", "description": "Anh em giả kim thuật sư tìm lại cơ thể.",             "tags": ["Giả tưởng","Phiêu lưu"]},
+        {"title": "Hunter x Hunter",     "description": "Kỳ thi thợ săn và những chuyến phiêu lưu.",           "tags": ["Phiêu lưu","Hành động"]},
+        {"title": "Black Clover",        "description": "Cậu bé không phép thuật muốn làm Vua pháp sư.",       "tags": ["Giả tưởng","Phép thuật"]},
+        {"title": "Blue Lock",           "description": "Dự án đào tạo tiền đạo số 1 thế giới.",               "tags": ["Thể thao","Bóng đá"]},
+        {"title": "Haikyuu!!",           "description": "Đam mê bóng chuyền bất tận.",                         "tags": ["Thể thao","Học đường"]},
+        {"title": "Sword Art Online",    "description": "Mắc kẹt trong thế giới game thực tế ảo.",             "tags": ["Game","Hành động"]},
+        {"title": "One Punch Man",       "description": "Anh hùng đấm phát chết luôn.",                        "tags": ["Hài hước","Hành động"]},
+        {"title": "Vinland Saga",        "description": "Sử thi về những chiến binh Viking.",                   "tags": ["Lịch sử","Hành động"]},
     ]
 
-    for i, (title, desc, tags, views, likes) in enumerate(data):
+    headers = {"User-Agent": "Mozilla/5.0"}
+
+    for i, data in enumerate(comics_data):
+        # Tạo tags
         tag_objs = []
-        for t in tags:
-            tag, _ = Tag.objects.get_or_create(name=t)
+        for tag_name in data['tags']:
+            tag, _ = Tag.objects.get_or_create(name=tag_name)
             tag_objs.append(tag)
 
+        # Tạo comic
         comic = Comic.objects.create(
-            title=title, description=desc,
-            views=views, likes=likes
+            title=data['title'],
+            description=data['description'],
+            views=1000 + i * 10,
+            likes=500 + i * 5,
         )
         comic.tags.set(tag_objs)
 
-        for n in range(1, 6):
-            Chapter.objects.create(
-                comic=comic,
-                chapter_number=n,
-                title=f"Chương {n}"
-            )
-        print(f"✅ {title}")
+        # Tạo chapters
+        for n in range(1, 4):
+            Chapter.objects.create(comic=comic, chapter_number=n, title=f"Chương {n}")
 
-    print(f"\n🎉 Đã tạo {Comic.objects.count()} bộ truyện!")
+        # Tải ảnh bìa từ Jikan
+        try:
+            image_url = get_cover(data['title'])
+            print(f"📡 Đang tải ảnh: {data['title']}")
+            if image_url:
+                res = requests.get(image_url, headers=headers, timeout=10)
+                if res.status_code == 200:
+                    fname = f"{data['title'].replace(' ','_')}.jpg"
+                    img_file = SimpleUploadedFile(fname, BytesIO(res.content).read(), content_type="image/jpeg")
+                    comic.cover_image.save(fname, img_file, save=True)
+                    print(f"✅ {data['title']}")
+                else:
+                    print(f"❌ Lỗi ảnh {data['title']}: {res.status_code}")
+            else:
+                print(f"⚠️ Không lấy được ảnh: {data['title']}")
+        except Exception as e:
+            print(f"⚠️ {data['title']}: {e}")
+
+        time.sleep(1)  # Tránh Jikan rate limit
+
+    print(f"\n✨ Xong! Đã tạo {Comic.objects.count()} bộ truyện.")
 
 run()
