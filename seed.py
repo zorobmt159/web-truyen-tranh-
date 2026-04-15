@@ -128,3 +128,9 @@ def run():
 # RUN ALL
 run()
 create_admin()
+
+# seed.py - Giữ nguyên code, thêm check này ở cuối:
+
+if __name__ == '__main__':
+    run()
+    create_admin()
