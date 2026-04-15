@@ -22,7 +22,7 @@ def create_admin():
     if not User.objects.filter(username="admin").exists():
         User.objects.create_superuser(
             username="admin",
-            email="admin@gmail.com",   //email admin
+            email="admin@gmail.com",   #email admin
             password="123"
         )
         print("✅ Admin created")
