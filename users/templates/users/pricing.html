@@ -5,79 +5,159 @@
 {% block page_class %}no-sidebar{% endblock %}
 {% block sidebar %}{% endblock %}
 
-
 {% block extra_css %}
 <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+
 <style>
-  .plan-card{transition:transform .2s,box-shadow .2s;}
-  .plan-card:hover{transform:translateY(-6px);}
-  .current-plan{border-color:#f0a500!important;box-shadow:0 0 20px rgba(240,165,0,.2);}
+  .plan-card{
+    transition: transform .2s, box-shadow .2s;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: visible;
+  }
+
+  .plan-card:hover{
+    transform: translateY(-6px);
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+
+  .current-plan{
+    border-color:#f0a500!important;
+    box-shadow:0 0 20px rgba(240,165,0,.25);
+  }
+
+  .badge-popular{
+    position:absolute;
+    top:10px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#f97316;
+    color:#fff;
+    font-size:11px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:999px;
+    z-index:10;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
-<h2 class="section-title">Chọn gói của bạn</h2>
-<p style="color:var(--muted);margin-bottom:24px;font-size:.9rem;">Nâng cấp để đọc không giới hạn, không quảng cáo</p>
 
-{% if messages %}{% for msg in messages %}<div style="background:rgba(232,84,10,.15);border:1px solid var(--accent);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--accent);">{{ msg }}</div>{% endfor %}{% endif %}
+<h2 class="section-title">Chọn gói của bạn</h2>
+<p style="color:var(--muted);margin-bottom:24px;font-size:.9rem;">
+  Nâng cấp để đọc không giới hạn, không quảng cáo
+</p>
+
+{% if messages %}
+  {% for msg in messages %}
+    <div style="background:rgba(232,84,10,.15);border:1px solid var(--accent);border-radius:8px;padding:12px 16px;margin-bottom:16px;color:var(--accent);">
+      {{ msg }}
+    </div>
+  {% endfor %}
+{% endif %}
 
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
 
   <!-- FREE -->
-  <div class="plan-card bg-gray-900 border-2 {% if current_plan == 'free' %}current-plan{% else %}border-gray-800{% endif %} rounded-xl p-6 flex flex-col">
+  <div class="plan-card {% if current_plan == 'free' %}current-plan{% endif %} rounded-xl p-6 flex flex-col">
     <div class="mb-4">
       <h2 class="text-xl font-bold text-white">Free</h2>
-      <p class="text-4xl font-bold text-white mt-2">0đ <span class="text-sm text-gray-500 font-normal">/tháng</span></p>
+      <p class="text-4xl font-bold text-white mt-2">
+        0đ <span class="text-sm text-gray-500 font-normal">/tháng</span>
+      </p>
     </div>
+
     <ul class="text-sm text-gray-400 space-y-2 flex-1 mb-6">
-      <li>✅ Đọc truyện miễn phí</li><li>✅ Tìm kiếm không giới hạn</li>
-      <li>❌ Có quảng cáo</li><li>❌ Không đọc sớm chapter mới</li><li>❌ Không tải offline</li>
+      <li>✅ Đọc truyện miễn phí</li>
+      <li>✅ Tìm kiếm không giới hạn</li>
+      <li>❌ Có quảng cáo</li>
+      <li>❌ Không đọc sớm chapter mới</li>
+      <li>❌ Không tải offline</li>
     </ul>
-    <button disabled class="w-full py-2 rounded-lg {% if current_plan == 'free' %}bg-yellow-500 text-yellow-900{% else %}bg-gray-700 text-gray-400{% endif %} font-bold text-sm cursor-not-allowed">
+
+    <button disabled class="w-full py-2 rounded-lg
+      {% if current_plan == 'free' %}
+        bg-yellow-500 text-yellow-900
+      {% else %}
+        bg-gray-700 text-gray-400
+      {% endif %}
+      font-bold text-sm cursor-not-allowed">
       {% if current_plan == 'free' %}✅ Gói hiện tại{% else %}Gói cơ bản{% endif %}
     </button>
   </div>
 
   <!-- PRO -->
-  <div class="plan-card bg-gray-900 border-2 {% if current_plan == 'pro' %}current-plan{% else %}border-orange-900{% endif %} rounded-xl p-6 flex flex-col relative">
-    <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs font-bold px-3 py-1 rounded-full">PHỔ BIẾN</div>
+  <div class="plan-card {% if current_plan == 'pro' %}current-plan{% endif %} rounded-xl p-6 flex flex-col">
+
+    <div class="badge-popular">PHỔ BIẾN</div>
+
     <div class="mb-4">
       <h2 class="text-xl font-bold text-orange-400">Pro</h2>
-      <p class="text-4xl font-bold text-white mt-2">49.000đ <span class="text-sm text-gray-500 font-normal">/tháng</span></p>
+      <p class="text-4xl font-bold text-white mt-2">
+        49.000đ <span class="text-sm text-gray-500 font-normal">/tháng</span>
+      </p>
     </div>
+
     <ul class="text-sm text-gray-400 space-y-2 flex-1 mb-6">
-      <li>✅ Tất cả tính năng Free</li><li>✅ Không quảng cáo</li>
-      <li>✅ Đọc sớm chapter mới</li><li>✅ Bookmark không giới hạn</li><li>❌ Không tải offline</li>
+      <li>✅ Tất cả tính năng Free</li>
+      <li>✅ Không quảng cáo</li>
+      <li>✅ Đọc sớm chapter mới</li>
+      <li>✅ Bookmark không giới hạn</li>
+      <li>❌ Không tải offline</li>
     </ul>
+
     {% if current_plan == 'pro' %}
-      <button disabled class="w-full py-2 rounded-lg bg-yellow-500 text-yellow-900 font-bold text-sm cursor-not-allowed">✅ Gói hiện tại</button>
+      <button disabled class="w-full py-2 rounded-lg bg-yellow-500 text-yellow-900 font-bold text-sm cursor-not-allowed">
+        ✅ Gói hiện tại
+      </button>
     {% elif current_plan == 'premium' %}
-      <button disabled class="w-full py-2 rounded-lg bg-gray-700 text-gray-500 font-bold text-sm cursor-not-allowed">Gói thấp hơn gói hiện tại</button>
+      <button disabled class="w-full py-2 rounded-lg bg-gray-700 text-gray-500 font-bold text-sm cursor-not-allowed">
+        Gói thấp hơn gói hiện tại
+      </button>
     {% else %}
-      <a href="{% url 'checkout' plan='pro' %}" class="block w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm text-center">Đăng ký Pro</a>
+      <a href="{% url 'checkout' plan='pro' %}"
+         class="block w-full py-2 rounded-lg bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm text-center">
+        Đăng ký Pro
+      </a>
     {% endif %}
   </div>
 
   <!-- PREMIUM -->
-  <div class="plan-card bg-gray-900 border-2 {% if current_plan == 'premium' %}current-plan{% else %}border-yellow-900{% endif %} rounded-xl p-6 flex flex-col">
+  <div class="plan-card {% if current_plan == 'premium' %}current-plan{% endif %} rounded-xl p-6 flex flex-col">
+
     <div class="mb-4">
       <h2 class="text-xl font-bold text-yellow-400">Premium</h2>
-      <p class="text-4xl font-bold text-white mt-2">99.000đ <span class="text-sm text-gray-500 font-normal">/tháng</span></p>
+      <p class="text-4xl font-bold text-white mt-2">
+        99.000đ <span class="text-sm text-gray-500 font-normal">/tháng</span>
+      </p>
     </div>
+
     <ul class="text-sm text-gray-400 space-y-2 flex-1 mb-6">
-      <li>✅ Tất cả tính năng Pro</li><li>✅ Tải chapter offline</li>
-      <li>✅ Đọc trước 7 ngày</li><li>✅ Hỗ trợ ưu tiên 24/7</li><li>✅ Badge Premium đặc biệt</li>
+      <li>✅ Tất cả tính năng Pro</li>
+      <li>✅ Tải chapter offline</li>
+      <li>✅ Đọc trước 7 ngày</li>
+      <li>✅ Hỗ trợ ưu tiên 24/7</li>
+      <li>✅ Badge Premium đặc biệt</li>
     </ul>
+
     {% if current_plan == 'premium' %}
-      <a href="{% url 'cancel_subscription' %}" class="block w-full py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold text-sm text-center">Hủy gia hạn</a>
+      <a href="{% url 'cancel_subscription' %}"
+         class="block w-full py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold text-sm text-center">
+        Hủy gia hạn
+      </a>
     {% else %}
-      <a href="{% url 'checkout' plan='premium' %}" class="block w-full py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-yellow-900 font-bold text-sm text-center">Đăng ký Premium</a>
+      <a href="{% url 'checkout' plan='premium' %}"
+         class="block w-full py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 text-yellow-900 font-bold text-sm text-center">
+        Đăng ký Premium
+      </a>
     {% endif %}
   </div>
 
 </div>
 
-<!-- Bảng so sánh -->
+<!-- BẢNG SO SÁNH -->
 <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;">
   <table style="width:100%;border-collapse:collapse;font-size:.88rem;">
     <thead>
@@ -100,4 +180,5 @@
     </tbody>
   </table>
 </div>
+
 {% endblock %}
